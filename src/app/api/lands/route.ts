@@ -91,6 +91,12 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log("===== LIMIT CHECK =====");
+    console.log("Agent Plan:", agent?.plan);
+    console.log("Current Listings:", agent?.listings.length);
+    console.log("Incoming Photos:", images.length);
+    console.log("=======================");
+
     if (!agent) {
       return NextResponse.json(
         {
@@ -103,19 +109,43 @@ export async function POST(req: NextRequest) {
     }
 
     // =========================
-    // Subscription Limits
+    // Listing Limits
     // =========================
-    const listingLimit =
+
+    const isMasterlister = agent.role === "masterlister";
+
+    const baseListingLimit =
       agent.plan === "professional" ? 10 : 3;
 
-    const photoLimit =
-      agent.plan === "professional" ? 20 : 5;
+    const listingLimit = isMasterlister
+      ? Infinity
+      : baseListingLimit + agent.extraListings;
 
-    if (agent.listings.length >= listingLimit) {
+    const photoLimit = isMasterlister
+      ? Infinity
+      : agent.plan === "professional"
+        ? 20
+        : 3;
+
+    console.log("===== FINAL LIMIT CHECK =====");
+    console.log("Agent:", agent.email);
+    console.log("Role:", agent.role);
+    console.log("Plan:", agent.plan);
+    console.log("Current Listings:", agent.listings.length);
+    console.log("Base Listings:", baseListingLimit);
+    console.log("Extra Listings:", agent.extraListings);
+    console.log("Total Listing Limit:", listingLimit);
+    console.log("Photo Limit:", photoLimit);
+    console.log("============================");
+
+    // Masterlister = unlimited
+    if (
+      !isMasterlister &&
+      agent.listings.length >= listingLimit
+     ) {
       return NextResponse.json(
         {
-          error:
-            "You have reached your listing limit. Please upgrade your subscription.",
+         error: `Your ${agent.plan} plan allows only ${listingLimit} listings.`,
         },
         {
           status: 403,
@@ -123,16 +153,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (images.length > photoLimit) {
+    // Masterlister = unlimited photos too
+    if (
+      !isMasterlister &&
+      images.length > photoLimit
+    ) {
       return NextResponse.json(
         {
-          error: `Maximum ${photoLimit} photos allowed for your current plan.`,
+          error: `Your ${agent.plan} plan allows maximum ${photoLimit} photos per listing.`,
         },
         {
           status: 403,
         }
-      );
+     );
     }
+
+
 
     // =========================
     // Create Listing

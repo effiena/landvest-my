@@ -23,9 +23,25 @@ export default function Navbar() {
   return (
     <nav style={styles.nav}>
       {/* LEFT LOGO */}
-      <Link href="/" style={styles.logo}>
-        🌾 LandVest
+
+      <Link
+        href="/"
+        className="
+          px-4 py-2
+          rounded-xl
+          bg-white/40
+          backdrop-blur-md
+          border border-white/30
+          text-slate-900
+          font-bold
+          shadow-sm
+          transition
+          hover:bg-white/60
+        "
+      >
+        🌿 LandVest 🌿
       </Link>
+
 
       {/* RIGHT BUTTONS */}
       <div style={styles.right}>
@@ -62,7 +78,7 @@ const styles: any = {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "14px 24px",
-    background: "#0F172A",
+    background: "#F4F7FB",
     color: "white",
     position: "sticky",
     top: 0,
@@ -100,7 +116,7 @@ const styles: any = {
   },
 
   logout: {
-    background: "transparent",
+    background: "#FACC15",
     border: "1px solid #fff",
     color: "white",
     padding: "8px 14px",

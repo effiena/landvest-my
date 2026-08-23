@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  password String
+
+  emailVerified Boolean   @default(false)
+  verifyToken   String?   @unique
+
+  plan String @default("starter")
+
+  // User role
+  // agent = normal user
+  // masterlister = Yoori/admin with unlimited listings
+  role String @default("agent")
+
+  // Included plan limit
+  listingLimit Int @default(3)
+
+  // Extra purchased listing credits
+  extraListings Int @default(0)
+
+  createdAt DateTime @default(now())
+
+  listings     Land[]
+  subscription Subscription?
+
+  purchases ListingCreditPurchase[]
+}
+
+model Subscription {
+  id        Int       @id @default(autoincrement())
+  agentId   Int       @unique
+  paypalId  String?   @unique
+  status    String    @default("inactive")
+  plan      String    @default("starter")
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  startedAt DateTime?
+  agent     Agent     @relation(fields: [agentId], references: [id])
+}
+
+model ListingCreditPurchase {
+  id Int @id @default(autoincrement())
+
+  agentId Int
+
+  credits Int
+  amount  Float
+
+  paypalOrderId String? @unique
+
+  status String @default("pending")
+
+  createdAt DateTime @default(now())
+
+  agent Agent @relation(fields: [agentId], references: [id])
+}
+
+model Land {
+  id          Int         @id @default(autoincrement())
+  agentId     Int
+  title       String
+  location    String
+  state       String
+  acreage     Float
+  price       String
+  description String
+  whatsapp    String
+  createdAt   DateTime    @default(now())
+  agent       Agent       @relation(fields: [agentId], references: [id])
+  images      LandImage[]
+}
+
+model LandImage {
+  id      Int     @id @default(autoincrement())
+  url     String
+  isCover Boolean @default(false)
+  landId  Int
+  land    Land    @relation(fields: [landId], references: [id], onDelete: Cascade)
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+}

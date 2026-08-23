@@ -1,14 +1,16 @@
+
 import { prisma } from "@/lib/prisma";
 import AdminClient from "./AdminClient";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 export default async function AdminDashboard() {
-  // 🍪 GET COOKIES (NEXT.JS 16 FIX)
+  // =========================
+  // GET LOGIN COOKIE
+  // =========================
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  // ❌ NO TOKEN
   if (!token) {
     return (
       <div style={{ padding: 40 }}>
@@ -18,7 +20,9 @@ export default async function AdminDashboard() {
     );
   }
 
-  // 🔓 VERIFY JWT
+  // =========================
+  // VERIFY JWT
+  // =========================
   let decoded: any;
 
   try {
@@ -26,7 +30,7 @@ export default async function AdminDashboard() {
       token,
       process.env.JWT_SECRET || "dev_secret_key"
     );
-  } catch (err) {
+  } catch {
     return (
       <div style={{ padding: 40 }}>
         <h2>Session Invalid</h2>
@@ -35,7 +39,9 @@ export default async function AdminDashboard() {
     );
   }
 
-  // 👤 GET AGENT + THEIR LISTINGS
+  // =========================
+  // FIND LOGGED-IN AGENT
+  // =========================
   const agent = await prisma.agent.findUnique({
     where: {
       id: decoded.id,
@@ -52,7 +58,6 @@ export default async function AdminDashboard() {
     },
   });
 
-  // ❌ AGENT NOT FOUND
   if (!agent) {
     return (
       <div style={{ padding: 40 }}>
@@ -61,7 +66,23 @@ export default async function AdminDashboard() {
     );
   }
 
-  // 📦 SEND DATA TO CLIENT UI
+  // =========================
+  // MASTERLISTER ACCESS
+  // =========================
+  if (agent.role !== "masterlister") {
+    return (
+      <div style={{ padding: 40 }}>
+        <h2>Access Denied</h2>
+        <p>
+          You do not have masterlister access.
+        </p>
+      </div>
+    );
+  }
+
+  // =========================
+  // MASTERLISTER DASHBOARD
+  // =========================
   return (
     <AdminClient
       agent={agent}

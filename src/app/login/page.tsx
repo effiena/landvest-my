@@ -10,49 +10,45 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    console.log("LOGIN RESPONSE:", data); // 🔥 IMPORTANT DEBUG
+      console.log("LOGIN RESPONSE:", data);
 
-    if (!res.ok) {
-      alert(data.error || "Login failed");
-      setLoading(false);
-      return;
-    }
+      if (!res.ok) {
+        alert(data.error || "Login failed");
+        setLoading(false);
+        return;
+      }
 
-    if (data.token) {
-      document.cookie = `token=${data.token}; path=/; max-age=604800`;
-
-      console.log("REDIRECTING...");
+      // Login successful.
+      // The server has already created the HTTP-only token cookie.
+      console.log("LOGIN SUCCESS");
+      console.log("Redirecting to admin...");
 
       router.push("/admin");
-    } else {
-      alert("No token received");
+      router.refresh();
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Something went wrong. Please try again.");
+      setLoading(false);
     }
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong");
-  }
-
-  setLoading(false);
-};
-
-
-
-
+  };
 
   return (
     <main style={styles.page}>
@@ -66,6 +62,8 @@ const handleLogin = async (e: React.FormEvent) => {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
           />
 
           <input
@@ -74,9 +72,15 @@ const handleLogin = async (e: React.FormEvent) => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
           />
 
-          <button style={styles.button} type="submit" disabled={loading}>
+          <button
+            style={styles.button}
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
@@ -86,6 +90,7 @@ const handleLogin = async (e: React.FormEvent) => {
 }
 
 /* ===== STYLES ===== */
+
 const styles: any = {
   page: {
     height: "100vh",

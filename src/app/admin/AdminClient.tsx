@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import DeleteButton from "./components/DeleteButton";
+import PayPalUpgrade from "@/components/PayPalUpgrade";
+import BuyListingCredit from "@/components/BuyListingCredit";
 
 export default function AdminClient({ lands, agent }: any) {
   const [form, setForm] = useState({
@@ -19,9 +21,15 @@ export default function AdminClient({ lands, agent }: any) {
   const [loading, setLoading] = useState(false);
 
   // PLAN LOGIC
-  const limit = agent?.plan === "professional" ? 10 : 3;
-  const canCreate = lands.length < limit;
 
+
+  const baseLimit = agent?.plan === "professional" ? 10 : 3;
+
+  const extraListings = agent?.extraListings || 0;
+
+  const totalLimit = baseLimit + extraListings;
+
+  const canCreate = lands.length < totalLimit;
   const handleChange = (e: any) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -48,13 +56,41 @@ export default function AdminClient({ lands, agent }: any) {
     return urls;
   };
 
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if (!canCreate && !editingLand) return;
+
+    const photoLimit = agent?.plan === "professional" ? 20 : 3;
+
+
+    if (!editingLand && !canCreate) {
+
+      const extraPrice =
+        agent?.plan === "professional"
+          ? "RM1.70"
+          : "RM2.90";
+
+
+      alert(
+        `You have reached your ${agent.plan} plan limit (${totalLimit} listings).\n\nAdditional listing is available at ${extraPrice} per listing.`
+      );
+
+      return;
+    }
+
+    if (files && files.length > photoLimit) {
+      alert(
+        `Your ${agent.plan} plan allows only ${photoLimit} photos per listing.`
+      );
+      return;
+    }
 
     setLoading(true);
 
     const imageUrls = await uploadImages(files);
+
+    console.log("Images being sent:", imageUrls.length);
+
     console.log("FORM =", form);
     console.log("FORM ACREAGE =", form.acreage);
     console.log("NUMBER =", Number(form.acreage));
@@ -73,10 +109,21 @@ export default function AdminClient({ lands, agent }: any) {
       }
     );
 
-    setLoading(false);
-    if (res.ok) window.location.reload();
-  };
 
+    setLoading(false);
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Something went wrong.");
+      return;
+    }
+
+    alert(data.message || "Listing saved successfully.");
+
+    window.location.reload();
+
+  };
   const handleEdit = (land: any) => {
     setEditingLand(land);
     setForm({
@@ -106,17 +153,83 @@ export default function AdminClient({ lands, agent }: any) {
             Plan: {agent?.plan}
           </span>
           <span style={styles.badgeYellow}>
-            {lands.length} / {limit}
+            {lands.length} / {totalLimit}
           </span>
         </div>
       </div>
 
-      {/* WARNING */}
-      {!canCreate && !editingLand && (
-        <div style={styles.warning}>
-          ⚠ You reached your limit. Upgrade to Professional to add more listings.
-        </div>
+
+      {/* PLAN OPTIONS */}
+
+      {agent?.plan !== "professional" && (
+      <div style={styles.warning}>
+
+      <h3>
+        🎁 Upgrade to LandVest Professional
+      </h3>
+
+      <p>
+        Unlock premium features for only RM8.90/month.
+      </p>
+
+      <ul>
+      <li>✅ Up to 10 active listings</li>
+      <li>✅ Up to 20 photos per listing</li>
+      <li>✅ Better exposure</li>
+      </ul>
+
+      <PayPalUpgrade />
+
+      </div>
       )}
+
+
+      {/* EXTRA LISTING PURCHASE */}
+
+      <div style={{
+        background:"#fff7ed",
+        padding:15,
+        borderRadius:8,
+        marginBottom:15
+      }}>
+
+      <h3>
+      ➕ Need More Listings?
+      </h3>
+
+
+      <p>
+        Current Plan: <b>{agent?.plan}</b>
+      </p>
+
+
+      <p>
+        Additional listing price:
+      </p>
+
+
+      <ul>
+
+      <li>
+      {agent?.plan === "professional"
+        ? "Professional: RM1.70 / listing"
+        : "Starter: RM2.90 / listing"}
+      </li>
+
+      </ul>
+
+
+      {/* Next component */}
+      <BuyListingCredit
+        plan={agent?.plan}
+      />
+
+
+      </div>
+
+
+
+
 
       {/* CONTENT GRID */}
       <div style={styles.grid}>

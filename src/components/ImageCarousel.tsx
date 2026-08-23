@@ -2,12 +2,17 @@
 
 import { useEffect, useState } from "react";
 
+
+
 export default function ImageCarousel({
   images,
 }: {
   images: any[];
 }) {
   const [current, setCurrent] = useState(0);
+  const [showLarge, setShowLarge] = useState(false);
+
+
 
   // Auto swipe every 4 seconds
   useEffect(() => {
@@ -57,6 +62,7 @@ export default function ImageCarousel({
         src={images[current].url}
         alt="Property"
         style={styles.image}
+        onClick={() => setShowLarge(true)}
       />
 
 
@@ -93,6 +99,19 @@ export default function ImageCarousel({
           </div>
         </>
       )}
+      {showLarge && (
+        <div
+          style={styles.overlay}
+          onClick={() => setShowLarge(false)}
+        >
+          <img
+            src={images[current].url}
+            alt="Large"
+            style={styles.largeImage}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
     </div>
   );
@@ -113,6 +132,7 @@ image:{
   width:"100%",
   height:"220px",
   objectFit:"cover",
+  cursor: "zoom-in",
 },
 
 
@@ -165,12 +185,32 @@ dots:{
 },
 
 
-dot:{
-  width:8,
-  height:8,
-  borderRadius:"50%",
-  background:"#fff",
-  cursor:"pointer",
-}
+dot: {
+  width: 8,
+  height: 8,
+  borderRadius: "50%",
+  background: "#fff",
+  cursor: "pointer",
+},
+
+overlay: {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100vw",
+  height: "100vh",
+  background: "rgba(0,0,0,0.9)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 9999,
+},
+
+largeImage: {
+  maxWidth: "95%",
+  maxHeight: "90%",
+  borderRadius: 12,
+},
+
 
 };
