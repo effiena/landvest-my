@@ -1,12 +1,19 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function sendVerificationEmail(
   email: string,
   name: string,
   verifyToken: string
 ) {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.error("RESEND_API_KEY is missing");
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+
+  const resend = new Resend(apiKey);
+
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     "http://localhost:3000";
