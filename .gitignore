@@ -47,3 +47,4 @@ venv/
 check-agent.ts
 *.backup
 prisma/dev.db
+prisma/dev.db
