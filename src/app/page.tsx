@@ -15,7 +15,16 @@ export default async function Home() {
 
       {/* HERO */}
       <section style={styles.hero}>
-        <h1 style={styles.title}>🌾 PropVest Malaysia</h1>
+        <h1 style={styles.title}>PropVest Malaysia</h1>
+        <div style={styles.hero}>
+          <h1 style={styles.heroTitle}>
+            PropVest Malaysia
+          </h1>
+
+          <p style={styles.heroSubtitle}>
+            Discover Home. Explore Land. Unlock Opportunities.
+          </p>
+        </div>
         <p style={styles.subtitle}>
           Discover properties and land investment opportunities across Malaysia
         </p>
@@ -41,10 +50,12 @@ const styles: any = {
   },
 
   /* HERO */
-  hero: {
-    padding: "40px",
-    textAlign: "center",
-  },
+hero: {
+  textAlign: "center",
+  padding: "45px 20px 30px",
+  width: "100%",
+  boxSizing: "border-box",
+},
 
   title: {
     fontSize: 42,
@@ -169,4 +180,19 @@ const styles: any = {
     padding: 50,
     color: "#64748B",
   },
+
+heroTitle: {
+  margin: 0,
+  fontSize: "clamp(32px, 7vw, 56px)",
+  fontWeight: 800,
+  lineHeight: 1.1,
+  letterSpacing: "-1px",
+},
+
+heroSubtitle: {
+  marginTop: 10,
+  marginBottom: 0,
+  fontSize: "clamp(15px, 3vw, 20px)",
+  color: "#666",
+},
 };
