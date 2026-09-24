@@ -15,19 +15,16 @@ export default async function Home() {
 
       {/* HERO */}
       <section style={styles.hero}>
-        <h1 style={styles.title}>ioioPropVest Malaysia</h1>
         <div style={styles.hero}>
           <h1 style={styles.heroTitle}>
             PropVest Malaysia
           </h1>
 
+
           <p style={styles.heroSubtitle}>
             Discover Home. Explores Land. Unlock Opportunities.
           </p>
         </div>
-        <p style={styles.subtitle}>
-          Discover properties and land investment opportunities across Malaysia
-        </p>
 
         <div style={styles.actions}>
           <Link href="/login" style={styles.btnDark}>Login</Link>
