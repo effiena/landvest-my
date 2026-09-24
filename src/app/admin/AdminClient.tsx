@@ -9,7 +9,20 @@ import PayPalUpgrade from "@/components/PayPalUpgrade";
 import BuyListingCredit from "@/components/BuyListingCredit";
 
 export default function AdminClient({ lands, agent }: any) {
+
   const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
+  };
+
 
   const [form, setForm] = useState({
     title: "",
@@ -23,30 +36,24 @@ export default function AdminClient({ lands, agent }: any) {
   });
 
   const [files, setFiles] = useState<FileList | null>(null);
+  const [importText, setImportText] = useState("");
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importLoading, setImportLoading] = useState(false);
   const [editingLand, setEditingLand] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  // PLAN LOGIC
+
+
   const baseLimit = agent?.plan === "professional" ? 10 : 3;
+
   const extraListings = agent?.extraListings || 0;
+
   const totalLimit = baseLimit + extraListings;
+
   const canCreate = lands.length < totalLimit;
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-    } finally {
-      router.push("/");
-      router.refresh();
-    }
-  };
-
   const handleChange = (e: any) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const uploadImages = async (files: FileList | null) => {
@@ -56,39 +63,35 @@ export default function AdminClient({ lands, agent }: any) {
 
     for (let i = 0; i < files.length; i++) {
       const formData = new FormData();
-
       formData.append("file", files[i]);
       formData.append("upload_preset", "landvest-my");
 
       const res = await fetch(
         "https://api.cloudinary.com/v1_1/ntzbhkdp/image/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
+        { method: "POST", body: formData }
       );
 
       const data = await res.json();
-
-      if (data.secure_url) {
-        urls.push(data.secure_url);
-      }
+      if (data.secure_url) urls.push(data.secure_url);
     }
 
     return urls;
   };
 
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const photoLimit =
-      agent?.plan === "professional" ? 20 : 3;
+    const photoLimit = agent?.plan === "professional" ? 20 : 3;
+
 
     if (!editingLand && !canCreate) {
+
       const extraPrice =
         agent?.plan === "professional"
           ? "RM1.70"
           : "RM2.90";
+
 
       alert(
         `You have reached your ${agent.plan} plan limit (${totalLimit} listings).\n\nAdditional listing is available at ${extraPrice} per listing.`
@@ -101,240 +104,179 @@ export default function AdminClient({ lands, agent }: any) {
       alert(
         `Your ${agent.plan} plan allows only ${photoLimit} photos per listing.`
       );
-
       return;
     }
 
     setLoading(true);
 
-    try {
-      const imageUrls = await uploadImages(files);
+    const imageUrls = await uploadImages(files);
 
-      const res = await fetch(
-        editingLand
-          ? `/api/lands/${editingLand.id}`
-          : "/api/lands",
-        {
-          method: editingLand ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...form,
-            areaValue: Number(form.areaValue),
-            areaUnit: form.areaUnit,
-            acreage: Number(form.areaValue) || 0,
-            images: imageUrls,
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.error || "Something went wrong.");
-        return;
+    const res = await fetch(
+      editingLand ? `/api/lands/${editingLand.id}` : "/api/lands",
+      {
+        method: editingLand ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          areaValue: Number(form.areaValue),
+          areaUnit: form.areaUnit,
+          acreage: Number(form.areaValue) || 0,
+          images: imageUrls,
+        }),
       }
+    );
 
-      alert(
-        data.message || "Listing saved successfully."
-      );
 
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong while saving the listing.");
-    } finally {
-      setLoading(false);
+    setLoading(false);
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Something went wrong.");
+      return;
     }
-  };
 
+    alert(data.message || "Listing saved successfully.");
+
+    window.location.reload();
+
+  };
   const handleEdit = (land: any) => {
     setEditingLand(land);
-
     setForm({
-      title: land.title || "",
-      location: land.location || "",
-      state: land.state || "",
-      areaValue:
-        land.areaValue ?? land.acreage ?? "",
-      areaUnit:
-        land.areaUnit ?? "acre",
-      price: land.price || "",
-      whatsapp: land.whatsapp || "",
-      description: land.description || "",
+      title: land.title,
+      location: land.location,
+      state: land.state,
+      areaValue: land.areaValue ?? land.acreage ?? "",
+      areaUnit: land.areaUnit ?? "acre",
+      price: land.price,
+      whatsapp: land.whatsapp,
+      description: land.description,
     });
-
-    setFiles(null);
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const handleCancel = () => {
-    setEditingLand(null);
-
-    setForm({
-      title: "",
-      location: "",
-      state: "",
-      areaValue: "",
-      areaUnit: "acre",
-      price: "",
-      whatsapp: "",
-      description: "",
-    });
-
-    setFiles(null);
-  };
-
-  const formatLandArea = (land: any) => {
-    const value =
-      land.areaValue ?? land.acreage ?? 0;
-
-    const unit =
-      land.areaUnit ?? "acre";
-
-    if (unit === "psf") {
-      return `${Number(value).toLocaleString()} PSF`;
-    }
-
-    if (unit === "hektar") {
-      return `${Number(value).toLocaleString()} Hektar`;
-    }
-
-    return `${Number(value).toLocaleString()} Acres`;
   };
 
   return (
     <div style={styles.page}>
-      {/* TOP BAR */}
-      <div style={styles.topBar}>
-        <div style={styles.brandSection}>
-          <h1 style={styles.h1}>
-            PropVest Agent Dashboard
-          </h1>
-
-          <p style={styles.sub}>
-            Manage your land listings efficiently
-          </p>
-        </div>
-
-        <div style={styles.headerRight}>
-          <div style={styles.badgeBox}>
-            <span style={styles.badge}>
-              Plan: {agent?.plan}
-            </span>
-
-            <span style={styles.badgeYellow}>
-              {lands.length} / {totalLimit}
-            </span>
-          </div>
-
-          <div style={styles.navButtons}>
-            <Link
-              href="/"
-              style={styles.homeBtn}
-            >
-              🏠 Home
-            </Link>
-
-            <button
-              onClick={handleLogout}
-              style={styles.logoutBtn}
-            >
-              🚪 Logout
-            </button>
-          </div>
-        </div>
+    {/* TOP BAR */}
+    <div style={styles.topBar}>
+      <div>
+        <h1 style={styles.h1}>PropVest Agent Dashboard</h1>
+        <p style={styles.sub}>
+          Manage your land listings efficiently
+        </p>
       </div>
 
-      {/* UPGRADE */}
-      {agent?.plan !== "professional" && (
-        <div style={styles.warning}>
-          <h3 style={styles.warningTitle}>
-            🎁 Upgrade to PropVest Professional
-          </h3>
+      <div style={styles.headerRight}>
+        <div style={styles.badgeBox}>
+          <span style={styles.badge}>
+            Plan: {agent?.plan}
+          </span>
 
-          <p>
-            Unlock premium features for only RM8.90/month.
-          </p>
-
-          <ul style={styles.featureList}>
-            <li>✅ Up to 10 active listings</li>
-            <li>✅ Up to 20 photos per listing</li>
-            <li>✅ Better exposure</li>
-          </ul>
-
-          <PayPalUpgrade />
+          <span style={styles.badgeYellow}>
+            {lands.length} / {totalLimit}
+          </span>
         </div>
+
+        <div style={styles.navButtons}>
+          <Link href="/" style={styles.homeBtn}>
+            🏠 Home
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            style={styles.logoutBtn}
+          >
+            🚪 Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+      {/* PLAN OPTIONS */}
+
+      {agent?.plan !== "professional" && (
+      <div style={styles.warning}>
+
+      <h3>
+        🎁 Upgrade to PropVest Professional
+      </h3>
+
+      <p>
+        Unlock premium features for only RM8.90/month.
+      </p>
+
+      <ul>
+      <li>✅ Up to 10 active listings</li>
+      <li>✅ Up to 20 photos per listing</li>
+      <li>✅ Better exposure</li>
+      </ul>
+
+      <PayPalUpgrade />
+
+      </div>
       )}
 
-      {/* EXTRA LISTINGS */}
-      <div style={styles.extraBox}>
-        <h3 style={styles.sectionTitle}>
-          ➕ Need More Listings?
-        </h3>
 
-        <p>
-          Current Plan: <b>{agent?.plan}</b>
-        </p>
+      {/* EXTRA LISTING PURCHASE */}
 
-        <p>
-          Additional listing price:
-        </p>
+      <div style={{
+        background:"#fff7ed",
+        padding:15,
+        borderRadius:8,
+        marginBottom:15
+      }}>
 
-        <ul style={styles.featureList}>
-          <li>
-            {agent?.plan === "professional"
-              ? "Professional: RM1.70 / listing"
-              : "Starter: RM2.90 / listing"}
-          </li>
-        </ul>
+      <h3>
+      ➕ Need More Listings?
+      </h3>
 
-        <BuyListingCredit
-          plan={agent?.plan}
-        />
+
+      <p>
+        Current Plan: <b>{agent?.plan}</b>
+      </p>
+
+
+      <p>
+        Additional listing price:
+      </p>
+
+
+      <ul>
+
+      <li>
+      {agent?.plan === "professional"
+        ? "Professional: RM1.70 / listing"
+        : "Starter: RM2.90 / listing"}
+      </li>
+
+      </ul>
+
+
+      {/* Next component */}
+      <BuyListingCredit
+        plan={agent?.plan}
+      />
+
+
       </div>
 
-      {/* MAIN GRID */}
+
+
+
+
+      {/* CONTENT GRID */}
       <div style={styles.grid}>
         {/* FORM */}
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>
-            {editingLand
-              ? "✏️ Edit Listing"
-              : "➕ Create Listing"}
+            {editingLand ? "✏️ Edit Listing" : "➕ Create Listing"}
           </h2>
 
           <div style={styles.form}>
-            <input
-              name="title"
-              placeholder="Title"
-              value={form.title}
-              onChange={handleChange}
-              style={styles.input}
-            />
-
-            <input
-              name="location"
-              placeholder="Location"
-              value={form.location}
-              onChange={handleChange}
-              style={styles.input}
-            />
-
-            <input
-              name="state"
-              placeholder="State"
-              value={form.state}
-              onChange={handleChange}
-              style={styles.input}
-            />
-
-            {/* AREA */}
+            <input name="title" placeholder="Title" value={form.title} onChange={handleChange} style={styles.input} />
+            <input name="location" placeholder="Location" value={form.location} onChange={handleChange} style={styles.input} />
+            <input name="state" placeholder="State" value={form.state} onChange={handleChange} style={styles.input} />
             <div style={styles.areaRow}>
               <input
                 name="areaValue"
@@ -352,35 +294,14 @@ export default function AdminClient({ lands, agent }: any) {
                 onChange={handleChange}
                 style={styles.areaSelect}
               >
-                <option value="acre">
-                  Acres / Ekar
-                </option>
-
-                <option value="psf">
-                  PSF
-                </option>
-
-                <option value="hektar">
-                  Hektar
-                </option>
+                <option value="acre">Acres / Ekar</option>
+                <option value="psf">PSF</option>
+                <option value="hektar">Hektar</option>
               </select>
             </div>
 
-            <input
-              name="price"
-              placeholder="Price"
-              value={form.price}
-              onChange={handleChange}
-              style={styles.input}
-            />
-
-            <input
-              name="whatsapp"
-              placeholder="WhatsApp"
-              value={form.whatsapp}
-              onChange={handleChange}
-              style={styles.input}
-            />
+            <input name="price" placeholder="Price" value={form.price} onChange={handleChange} style={styles.input} />
+            <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={handleChange} style={styles.input} />
 
             <textarea
               name="description"
@@ -390,57 +311,50 @@ export default function AdminClient({ lands, agent }: any) {
               style={styles.textarea}
             />
 
-            {/* PHOTO UPLOAD */}
             <div style={styles.fileUpload}>
-              <label
-                htmlFor="photo-upload"
-                style={styles.chooseFileBtn}
-              >
-                📷 Choose File
+              <label htmlFor="photo-upload" style={styles.chooseFileBtn}>
+                Choose File
               </label>
 
               <input
                 id="photo-upload"
                 type="file"
                 multiple
-                accept="image/*"
-                onChange={(e) =>
-                  setFiles(e.target.files)
-                }
+                onChange={(e) => setFiles(e.target.files)}
                 style={{ display: "none" }}
               />
 
               <span style={styles.fileName}>
                 {files && files.length > 0
-                  ? `${files.length} file${
-                      files.length > 1
-                        ? "s"
-                        : ""
-                    } chosen`
+                  ? `${files.length} file${files.length > 1 ? "s" : ""} chosen`
                   : "No file chosen"}
               </span>
             </div>
 
-            {/* SAVE */}
+
             <button
               onClick={handleSubmit}
               disabled={loading}
-              style={{
-                ...styles.primaryBtn,
-                opacity: loading ? 0.6 : 1,
-              }}
+              style={styles.primaryBtn}
             >
-              {loading
-                ? "Saving..."
-                : editingLand
-                ? "Update Listing"
-                : "Create Listing"}
+              {loading ? "Saving..." : editingLand ? "Update Listing" : "Create Listing"}
             </button>
 
-            {/* CANCEL */}
             {editingLand && (
               <button
-                onClick={handleCancel}
+                onClick={() => {
+                  setEditingLand(null);
+                  setForm({
+                    title: "",
+                    location: "",
+                    state: "",
+                    areaValue: "",
+                    areaUnit: "acre",
+                    price: "",
+                    whatsapp: "",
+                    description: "",
+                  });
+                }}
                 style={styles.secondaryBtn}
               >
                 Cancel
@@ -450,72 +364,36 @@ export default function AdminClient({ lands, agent }: any) {
         </div>
 
         {/* LISTINGS */}
-        <div style={styles.listingsSection}>
-          <h2 style={styles.mobileListingTitle}>
-            📋 Your Listings
-          </h2>
-
-          <div style={styles.listings}>
-            {lands.map((land: any) => (
-              <div
-                key={land.id}
-                style={styles.listCard}
-              >
-                {/* IMAGE */}
-                <div style={styles.imgRow}>
-                  {land.images?.length ? (
-                    land.images.map((img: any) => (
-                      <img
-                        key={img.id}
-                        src={img.url}
-                        alt={land.title}
-                        style={styles.img}
-                      />
-                    ))
-                  ) : (
-                    <div style={styles.noImg}>
-                      No Image
-                    </div>
-                  )}
-                </div>
-
-                {/* INFO */}
-                <h3 style={styles.title}>
-                  {land.title}
-                </h3>
-
-                <p style={styles.text}>
-                  📍 {land.location}
-                </p>
-
-                <p style={styles.text}>
-                  🗺 {land.state}
-                </p>
-
-                <p style={styles.areaText}>
-                  🌾 {formatLandArea(land)}
-                </p>
-
-                <p style={styles.price}>
-                  💰 {land.price}
-                </p>
-
-                {/* ACTIONS */}
-                <div style={styles.actions}>
-                  <button
-                    onClick={() =>
-                      handleEdit(land)
-                    }
-                    style={styles.editBtn}
-                  >
-                    ✏️ Edit
-                  </button>
-
-                  <DeleteButton id={land.id} />
-                </div>
+        <div style={styles.listings}>
+          {lands.map((land: any) => (
+            <div key={land.id} style={styles.listCard}>
+              {/* IMAGE */}
+              <div style={styles.imgRow}>
+                {land.images?.length ? (
+                  land.images.map((img: any) => (
+                    <img key={img.id} src={img.url} style={styles.img} />
+                  ))
+                ) : (
+                  <div style={styles.noImg}>No Image</div>
+                )}
               </div>
-            ))}
-          </div>
+
+              {/* INFO */}
+              <h3 style={styles.title}>{land.title}</h3>
+              <p style={styles.text}>📍 {land.location}</p>
+              <p style={styles.text}>🗺 {land.state}</p>
+              <p style={styles.price}>💰 {land.price}</p>
+
+              {/* ACTIONS */}
+              <div style={styles.actions}>
+                <button onClick={() => handleEdit(land)} style={styles.editBtn}>
+                  Edit
+                </button>
+
+                <DeleteButton id={land.id} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -523,71 +401,26 @@ export default function AdminClient({ lands, agent }: any) {
 }
 
 /* ================= DESIGN ================= */
-
 const styles: any = {
   page: {
-    padding: "20px",
+    padding: 25,
     background: "#f4f6fb",
     minHeight: "100vh",
-    fontFamily: "Arial, sans-serif",
-    boxSizing: "border-box",
+    fontFamily: "Arial",
   },
 
   topBar: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 20,
     marginBottom: 20,
-    flexWrap: "wrap",
-  },
-
-  brandSection: {
-    minWidth: 0,
-    flex: "1 1 300px",
-  },
-
-  h1: {
-    margin: 0,
-    fontSize: 28,
-    lineHeight: 1.2,
-  },
-
-  sub: {
-    color: "#666",
-    marginTop: 8,
-    marginBottom: 0,
   },
 
   headerRight: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: 15,
     flexWrap: "wrap",
     justifyContent: "flex-end",
-  },
-
-  badgeBox: {
-    display: "flex",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-
-  badge: {
-    background: "#111",
-    color: "#fff",
-    padding: "7px 12px",
-    borderRadius: 20,
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-
-  badgeYellow: {
-    background: "#FACC15",
-    padding: "7px 12px",
-    borderRadius: 20,
-    fontSize: 12,
-    fontWeight: "bold",
   },
 
   navButtons: {
@@ -596,7 +429,7 @@ const styles: any = {
   },
 
   homeBtn: {
-    padding: "9px 14px",
+    padding: "8px 14px",
     background: "#1E3A8A",
     color: "#fff",
     borderRadius: 7,
@@ -606,7 +439,7 @@ const styles: any = {
   },
 
   logoutBtn: {
-    padding: "9px 14px",
+    padding: "8px 14px",
     background: "#DC2626",
     color: "#fff",
     border: "none",
@@ -616,176 +449,82 @@ const styles: any = {
     fontWeight: "bold",
   },
 
+  h1: { margin: 0 },
+  sub: { color: "#666" },
+
+  badgeBox: { display: "flex", gap: 10 },
+
+  badge: {
+    background: "#111",
+    color: "#fff",
+    padding: "6px 12px",
+    borderRadius: 20,
+    fontSize: 12,
+  },
+
+  badgeYellow: {
+    background: "#FACC15",
+    padding: "6px 12px",
+    borderRadius: 20,
+    fontSize: 12,
+  },
+
   warning: {
     background: "#fee2e2",
     color: "#991b1b",
-    padding: 15,
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 8,
     marginBottom: 15,
-  },
-
-  warningTitle: {
-    marginTop: 0,
-  },
-
-  featureList: {
-    paddingLeft: 20,
-    marginBottom: 12,
-  },
-
-  extraBox: {
-    background: "#fff7ed",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-
-  sectionTitle: {
-    marginTop: 0,
-    marginBottom: 8,
   },
 
   grid: {
     display: "grid",
-    gridTemplateColumns:
-      "minmax(280px, 1fr) minmax(0, 2fr)",
+    gridTemplateColumns: "1fr 2fr",
     gap: 20,
-    alignItems: "start",
   },
 
   card: {
     background: "#fff",
-    padding: 18,
-    borderRadius: 12,
-    boxSizing: "border-box",
-    width: "100%",
+    padding: 15,
+    borderRadius: 10,
   },
 
-  cardTitle: {
-    marginTop: 0,
-    marginBottom: 15,
-    fontSize: 20,
-  },
+  cardTitle: { marginBottom: 10 },
 
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    width: "100%",
-  },
+  form: { display: "flex", flexDirection: "column", gap: 8 },
 
   input: {
-    padding: 12,
-    borderRadius: 7,
+    padding: 10,
+    borderRadius: 6,
     border: "1px solid #ddd",
-    fontSize: 14,
-    width: "100%",
-    boxSizing: "border-box",
-    outline: "none",
   },
 
   textarea: {
-    padding: 12,
-    borderRadius: 7,
+    padding: 10,
+    borderRadius: 6,
     border: "1px solid #ddd",
-    minHeight: 110,
-    fontSize: 14,
-    width: "100%",
-    boxSizing: "border-box",
-    resize: "vertical",
-    fontFamily: "Arial, sans-serif",
-  },
-
-  areaRow: {
-    display: "flex",
-    gap: 8,
-    width: "100%",
-  },
-
-  areaInput: {
-    flex: 1,
-    minWidth: 0,
-    padding: 12,
-    border: "1px solid #ddd",
-    borderRadius: 7,
-    fontSize: 14,
-    boxSizing: "border-box",
-  },
-
-  areaSelect: {
-    width: 145,
-    maxWidth: "42%",
-    padding: 12,
-    border: "1px solid #ddd",
-    borderRadius: 7,
-    fontSize: 14,
-    background: "#fff",
-    boxSizing: "border-box",
-  },
-
-  fileUpload: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    flexWrap: "wrap",
-    padding: "4px 0",
-  },
-
-  chooseFileBtn: {
-    display: "inline-block",
-    padding: "10px 15px",
-    background: "#111",
-    color: "#fff",
-    borderRadius: 7,
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-
-  fileName: {
-    fontSize: 13,
-    color: "#666",
-    wordBreak: "break-word",
+    minHeight: 80,
   },
 
   primaryBtn: {
-    padding: 12,
+    padding: 10,
     background: "#111",
     color: "#fff",
-    borderRadius: 7,
+    borderRadius: 6,
     border: "none",
     cursor: "pointer",
-    fontSize: 14,
-    fontWeight: "bold",
-    width: "100%",
   },
 
   secondaryBtn: {
-    padding: 12,
+    padding: 10,
     background: "#eee",
-    color: "#333",
-    borderRadius: 7,
+    borderRadius: 6,
     border: "none",
-    cursor: "pointer",
-    fontSize: 14,
-    width: "100%",
-  },
-
-  listingsSection: {
-    minWidth: 0,
-    width: "100%",
-  },
-
-  mobileListingTitle: {
-    marginTop: 0,
-    marginBottom: 12,
-    fontSize: 20,
   },
 
   listings: {
     display: "grid",
-    gridTemplateColumns:
-      "repeat(auto-fit, minmax(220px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
     gap: 15,
   },
 
@@ -793,115 +532,89 @@ const styles: any = {
     background: "#fff",
     borderRadius: 10,
     padding: 10,
-    minWidth: 0,
-    boxSizing: "border-box",
-    overflow: "hidden",
   },
 
   imgRow: {
     display: "flex",
     gap: 5,
     overflowX: "auto",
-    width: "100%",
-    paddingBottom: 3,
   },
 
   img: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
     objectFit: "cover",
     borderRadius: 6,
-    flexShrink: 0,
   },
 
   noImg: {
     padding: 20,
     color: "#999",
-    background: "#f5f5f5",
-    borderRadius: 6,
-    width: "100%",
-    textAlign: "center",
-    boxSizing: "border-box",
   },
 
-  title: {
-    margin: "10px 0 6px",
-    fontSize: 16,
-    lineHeight: 1.3,
-    overflowWrap: "anywhere",
-  },
-
-  text: {
-    fontSize: 13,
-    color: "#555",
-    margin: "5px 0",
-    overflowWrap: "anywhere",
-  },
-
-  areaText: {
-    fontSize: 13,
-    color: "#166534",
-    fontWeight: "bold",
-    margin: "6px 0",
-  },
-
-  price: {
-    fontWeight: "bold",
-    marginTop: 7,
-    overflowWrap: "anywhere",
-  },
+  title: { margin: "10px 0 5px" },
+  text: { fontSize: 13, color: "#555" },
+  price: { fontWeight: "bold", marginTop: 5 },
 
   actions: {
     display: "flex",
     justifyContent: "space-between",
-    gap: 8,
-    marginTop: 12,
+    marginTop: 10,
   },
 
   editBtn: {
-    padding: "8px 12px",
+    padding: "6px 10px",
     background: "#FACC15",
-    color: "#111",
     border: "none",
     borderRadius: 6,
     cursor: "pointer",
-    fontWeight: "bold",
-    flex: 1,
   },
+
+  areaRow: {
+    display: "flex",
+    gap: 10,
+    width: "100%",
+  },
+
+  areaInput: {
+    flex: 1,
+    padding: 12,
+    border: "1px solid #ddd",
+    borderRadius: 8,
+    fontSize: 14,
+  },
+
+  areaSelect: {
+    width: 170,
+    padding: 12,
+    border: "1px solid #ddd",
+    borderRadius: 8,
+    fontSize: 14,
+    background: "#fff",
+  },
+
+  fileUpload: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+
+  chooseFileBtn: {
+    display: "inline-block",
+    padding: "10px 16px",
+    background: "#111",
+    color: "#fff",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  fileName: {
+    fontSize: 14,
+    color: "#666",
+  },
+
+
 };
-
-/* ================= MOBILE ================= */
-
-if (typeof document !== "undefined") {
-  const styleId = "propvest-admin-responsive";
-
-  if (!document.getElementById(styleId)) {
-    const style = document.createElement("style");
-
-    style.id = styleId;
-
-    style.innerHTML = `
-      @media (max-width: 768px) {
-        body {
-          margin: 0;
-          overflow-x: hidden;
-        }
-
-        .propvest-admin-mobile {
-          width: 100%;
-        }
-      }
-
-      @media (max-width: 600px) {
-        input,
-        textarea,
-        select,
-        button {
-          font-size: 16px !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-  }
-}
