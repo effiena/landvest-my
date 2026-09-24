@@ -256,8 +256,8 @@ export default function AdminClient({ lands, agent }: any) {
       </p>
 
       <ul>
-      <li>✅ Up to 10 active listings</li>
-      <li>✅ Up to 20 photos per listing</li>
+      <li>✅ 10 active listings</li>
+      <li>✅ 20 photos per listing</li>
       <li>✅ Better exposure</li>
       </ul>
 

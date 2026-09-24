@@ -15,14 +15,14 @@ export default async function Home() {
 
       {/* HERO */}
       <section style={styles.hero}>
-        <h1 style={styles.title}>PropVest Malaysia</h1>
+        <h1 style={styles.title}>ioioPropVest Malaysia</h1>
         <div style={styles.hero}>
           <h1 style={styles.heroTitle}>
             PropVest Malaysia
           </h1>
 
           <p style={styles.heroSubtitle}>
-            Discover Home. Explore Land. Unlock Opportunities.
+            Discover Home. Explores Land. Unlock Opportunities.
           </p>
         </div>
         <p style={styles.subtitle}>
@@ -183,10 +183,12 @@ hero: {
 
 heroTitle: {
   margin: 0,
-  fontSize: "clamp(32px, 7vw, 56px)",
+  fontSize: "clamp(34px, 8vw, 58px)",
   fontWeight: 800,
   lineHeight: 1.1,
-  letterSpacing: "-1px",
+  letterSpacing: "-1.5px",
+  textAlign: "center",
+  color: "#0B2A5B",
 },
 
 heroSubtitle: {
