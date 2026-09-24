@@ -1,11 +1,29 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import DeleteButton from "./components/DeleteButton";
 import PayPalUpgrade from "@/components/PayPalUpgrade";
 import BuyListingCredit from "@/components/BuyListingCredit";
 
 export default function AdminClient({ lands, agent }: any) {
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+    } finally {
+      router.push("/");
+      router.refresh();
+    }
+  };
+
+
   const [form, setForm] = useState({
     title: "",
     location: "",
@@ -139,24 +157,40 @@ export default function AdminClient({ lands, agent }: any) {
 
   return (
     <div style={styles.page}>
-      {/* TOP BAR */}
-      <div style={styles.topBar}>
-        <div>
-          <h1 style={styles.h1}>🏡 LandVest Admin Panel</h1>
-          <p style={styles.sub}>
-            Manage your land listings efficiently
-          </p>
-        </div>
+    {/* TOP BAR */}
+    <div style={styles.topBar}>
+      <div>
+        <h1 style={styles.h1}>🏡 LandVest Admin Panel</h1>
+        <p style={styles.sub}>
+          Manage your land listings efficiently
+        </p>
+      </div>
 
+      <div style={styles.headerRight}>
         <div style={styles.badgeBox}>
           <span style={styles.badge}>
             Plan: {agent?.plan}
           </span>
+
           <span style={styles.badgeYellow}>
             {lands.length} / {totalLimit}
           </span>
         </div>
+
+        <div style={styles.navButtons}>
+          <Link href="/" style={styles.homeBtn}>
+            🏠 Home
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            style={styles.logoutBtn}
+          >
+            🚪 Logout
+          </button>
+        </div>
       </div>
+    </div>
 
 
       {/* PLAN OPTIONS */}
@@ -337,6 +371,40 @@ const styles: any = {
     display: "flex",
     justifyContent: "space-between",
     marginBottom: 20,
+  },
+
+  headerRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: 15,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  },
+
+  navButtons: {
+    display: "flex",
+    gap: 8,
+  },
+
+  homeBtn: {
+    padding: "8px 14px",
+    background: "#1E3A8A",
+    color: "#fff",
+    borderRadius: 7,
+    textDecoration: "none",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  logoutBtn: {
+    padding: "8px 14px",
+    background: "#DC2626",
+    color: "#fff",
+    border: "none",
+    borderRadius: 7,
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 
   h1: { margin: 0 },

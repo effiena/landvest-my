@@ -1,23 +1,34 @@
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import crypto from "crypto";
-import { sendVerificationEmail } from "@/lib/email";
+import { generateOtp, hashOtp } from "@/lib/whatsapp-otp";
+import { normalizeWhatsAppNumber } from "@/lib/whatsapp";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, email, password } = body;
+    const {
+      name,
+      email,
+      password,
+      whatsappNumber,
+    } = body;
 
     // =========================
     // VALIDATION
     // =========================
 
-    if (!name || !email || !password) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !whatsappNumber
+    ) {
       return NextResponse.json(
         {
-          error: "Name, email and password are required.",
+          error:
+            "Name, email, password and WhatsApp number are required.",
         },
         { status: 400 }
       );
@@ -27,21 +38,60 @@ export async function POST(req: Request) {
       email.trim().toLowerCase();
 
     // =========================
-    // CHECK EXISTING USER
+    // NORMALIZE WHATSAPP
     // =========================
 
-    const existing =
+    let normalizedWhatsApp: string;
+
+    try {
+      normalizedWhatsApp =
+        normalizeWhatsAppNumber(
+          whatsappNumber
+        );
+    } catch {
+      return NextResponse.json(
+        {
+          error:
+            "Please enter a valid Malaysian WhatsApp number.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // =========================
+    // CHECK EXISTING EMAIL
+    // =========================
+
+    const existingEmail =
       await prisma.agent.findUnique({
         where: {
           email: normalizedEmail,
         },
       });
 
-    if (existing) {
+    if (existingEmail) {
       return NextResponse.json(
         {
-          error: "Email already registered",
+          error: "Email already registered.",
         },
+        { status: 400 }
+      );
+    }
+
+    // =========================
+    // CHECK EXISTING WHATSAPP
+    // =========================
+    const existingWhatsApp =
+      await prisma.agent.findFirst({
+        where: {
+          whatsappNumber: normalizedWhatsApp,
+          legacySharedWhatsApp: false,
+        },
+      });
+
+    if (existingWhatsApp) {
+      return NextResponse.json(
+        { error: "This WhatsApp number is already registered." },
         { status: 400 }
       );
     }
@@ -54,73 +104,77 @@ export async function POST(req: Request) {
       await bcrypt.hash(password, 10);
 
     // =========================
-    // CREATE VERIFICATION TOKEN
+    // GENERATE 6-DIGIT OTP
     // =========================
 
-    const verifyToken =
-      crypto.randomBytes(32).toString("hex");
+    const otp = generateOtp();
+
+    const otpHash =
+      await hashOtp(otp);
+
+    // OTP valid for 10 minutes
+    const expiresAt = new Date(
+      Date.now() + 10 * 60 * 1000
+    );
 
     // =========================
     // CREATE AGENT
     // =========================
 
-    const agent = await prisma.agent.create({
-      data: {
-        name: name.trim(),
+    const agent =
+      await prisma.agent.create({
+        data: {
+          name: name.trim(),
 
-        email: normalizedEmail,
+          email: normalizedEmail,
 
-        password: hashedPassword,
+          whatsappNumber:
+            normalizedWhatsApp,
 
-        emailVerified: false,
+          legacySharedWhatsApp: false,
 
-        verifyToken,
-      },
-    });
+          password: hashedPassword,
 
-    // =========================
-    // SEND VERIFICATION EMAIL
-    // =========================
+          emailVerified: false,
 
-    try {
-      await sendVerificationEmail(
-        agent.email,
-        agent.name,
-        verifyToken
-      );
-    } catch (emailError) {
-      console.error(
-        "Verification email failed:",
-        emailError
-      );
+          verifyToken: null,
 
-      // Remove account if email cannot be sent
-      await prisma.agent.delete({
-        where: {
-          id: agent.id,
+          verificationCodeHash:
+            otpHash,
+
+          verificationExpiresAt:
+            expiresAt,
+
+          verificationAttempts: 0,
         },
       });
 
-      return NextResponse.json(
-        {
-          error:
-            "Account could not be created because the verification email could not be sent.",
-        },
-        { status: 500 }
-      );
-    }
+    // =========================
+    // TEMPORARY OTP
+    // =========================
+    //
+    // We will replace this with
+    // Meta WhatsApp Cloud API.
+    //
 
-    // =========================
-    // SUCCESS
-    // =========================
+    console.log(
+      `WhatsApp OTP for ${normalizedWhatsApp}: ${otp}`
+    );
 
     return NextResponse.json({
       success: true,
 
       message:
-        "Registration successful. Please check your email to verify your account.",
+        "Registration successful. Please verify your WhatsApp number.",
 
       email: agent.email,
+
+      // TEMPORARY DEVELOPMENT ONLY
+      developmentOtp:
+        process.env.NODE_ENV !==
+        "production"
+          ? otp
+          : undefined,
     });
 
   } catch (error) {

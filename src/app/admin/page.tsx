@@ -1,4 +1,3 @@
-
 import { prisma } from "@/lib/prisma";
 import AdminClient from "./AdminClient";
 import { cookies } from "next/headers";
@@ -15,7 +14,7 @@ export default async function AdminDashboard() {
     return (
       <div style={{ padding: 40 }}>
         <h2>Unauthorized</h2>
-        <p>Please login to access admin dashboard.</p>
+        <p>Please login to access your dashboard.</p>
       </div>
     );
   }
@@ -62,26 +61,13 @@ export default async function AdminDashboard() {
     return (
       <div style={{ padding: 40 }}>
         <h2>Agent not found</h2>
+        <p>Your account could not be found.</p>
       </div>
     );
   }
 
   // =========================
-  // MASTERLISTER ACCESS
-  // =========================
-  if (agent.role !== "masterlister") {
-    return (
-      <div style={{ padding: 40 }}>
-        <h2>Access Denied</h2>
-        <p>
-          You do not have masterlister access.
-        </p>
-      </div>
-    );
-  }
-
-  // =========================
-  // MASTERLISTER DASHBOARD
+  // USER DASHBOARD
   // =========================
   return (
     <AdminClient

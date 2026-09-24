@@ -8,33 +8,25 @@ datasource db {
 }
 
 model Agent {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-
-  emailVerified Boolean   @default(false)
-  verifyToken   String?   @unique
-
-  plan String @default("starter")
-
-  // User role
-  // agent = normal user
-  // masterlister = Yoori/admin with unlimited listings
-  role String @default("agent")
-
-  // Included plan limit
-  listingLimit Int @default(3)
-
-  // Extra purchased listing credits
-  extraListings Int @default(0)
-
-  createdAt DateTime @default(now())
-
-  listings     Land[]
-  subscription Subscription?
-
-  purchases ListingCreditPurchase[]
+  id                    Int                     @id @default(autoincrement())
+  name                  String
+  email                 String                  @unique
+  password              String
+  plan                  String                  @default("starter")
+  createdAt             DateTime                @default(now())
+  extraListings         Int                     @default(0)
+  listingLimit          Int                     @default(3)
+  role                  String                  @default("agent")
+  emailVerified         Boolean                 @default(false)
+  verifyToken           String?                 @unique
+  whatsappNumber        String?
+  verificationCodeHash  String?
+  verificationExpiresAt DateTime?
+  verificationAttempts  Int                     @default(0)
+  legacySharedWhatsApp  Boolean                 @default(false)
+  listings              Land[]
+  purchases             ListingCreditPurchase[]
+  subscription          Subscription?
 }
 
 model Subscription {
@@ -50,20 +42,14 @@ model Subscription {
 }
 
 model ListingCreditPurchase {
-  id Int @id @default(autoincrement())
-
-  agentId Int
-
-  credits Int
-  amount  Float
-
-  paypalOrderId String? @unique
-
-  status String @default("pending")
-
-  createdAt DateTime @default(now())
-
-  agent Agent @relation(fields: [agentId], references: [id])
+  id            Int      @id @default(autoincrement())
+  agentId       Int
+  credits       Int
+  amount        Float
+  paypalOrderId String?  @unique
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  agent         Agent    @relation(fields: [agentId], references: [id])
 }
 
 model Land {

@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error:
-            "Please verify your email address before logging in.",
+            "Please verify your WhatsApp number before logging in.",
         },
         { status: 403 }
       );
