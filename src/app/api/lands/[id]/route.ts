@@ -19,7 +19,12 @@ export async function PUT(
         title: body.title,
         location: body.location,
         state: body.state,
-        acreage: Number(body.acreage),
+        acreage: Number(body.acreage) || 0,
+        areaValue:
+           body.areaValue !== undefined && body.areaValue !== null
+            ? Number(body.areaValue)
+            : null,
+        areaUnit: body.areaUnit || "acre",
         price: body.price,
         description: body.description,
         whatsapp: body.whatsapp,

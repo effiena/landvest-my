@@ -63,6 +63,8 @@ model Land {
   description String
   whatsapp    String
   createdAt   DateTime    @default(now())
+  areaValue   Float?
+  areaUnit    String?
   agent       Agent       @relation(fields: [agentId], references: [id])
   images      LandImage[]
 }

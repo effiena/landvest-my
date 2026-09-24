@@ -4,19 +4,72 @@ import { verifyToken } from "@/lib/auth";
 
 function extractData(text: string) {
   const priceMatch = text.match(/RM\s?[\d,.]+/i);
-  const ekarMatch = text.match(/(\d+(\.\d+)?)\s*ekar/i);
+
+  // Detect land area:
+  // Acres / Acre / Ekar
+  // PSF / Sqft / Sq Ft
+  // Hektar / Hectare
+  const areaMatch = text.match(
+    /([\d,]+(?:\.\d+)?)\s*(acres?|ekar|psf|sq\.?\s*ft|sqft|hektar|hectares?|hectare)\b/i
+  );
+
   const phoneMatch = text.match(/(\+?6?01[0-9\- ]{7,})/);
+
+  let areaValue = 0;
+  let areaUnit = "acre";
+
+  if (areaMatch) {
+    areaValue = parseFloat(areaMatch[1].replace(/,/g, ""));
+
+    const rawUnit = areaMatch[2]
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (
+      rawUnit === "acre" ||
+      rawUnit === "acres" ||
+      rawUnit === "ekar"
+    ) {
+      areaUnit = "acre";
+    } else if (
+      rawUnit === "psf" ||
+      rawUnit === "sqft" ||
+      rawUnit === "sq ft" ||
+      rawUnit === "sq. ft"
+    ) {
+      areaUnit = "psf";
+    } else if (
+      rawUnit === "hektar" ||
+      rawUnit === "hectare" ||
+      rawUnit === "hectares"
+    ) {
+      areaUnit = "hektar";
+    }
+  }
 
   return {
     title: text.split("\n")[0].slice(0, 80),
+
     location:
       text.match(
         /📍.*|Location:.*|Jalan.*|Sungai.*|Langkawi.*|Johor.*|Selangor.*/i
       )?.[0] || "Unknown",
+
     state: "Malaysia",
-    acreage: ekarMatch ? parseFloat(ekarMatch[1]) : 0,
+
+    // Legacy field:
+    // Only store the value here when the original unit is acre/ekar.
+    acreage: areaUnit === "acre" ? areaValue : 0,
+
+    // New flexible area fields
+    areaValue,
+    areaUnit,
+
     price: priceMatch ? priceMatch[0] : "N/A",
+
     description: text.slice(0, 500),
+
     whatsapp: phoneMatch
       ? phoneMatch[0].replace(/[^\d]/g, "")
       : "",

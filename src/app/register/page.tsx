@@ -104,7 +104,7 @@ export default function RegisterPage() {
           </h1>
 
           <p className="text-sm text-gray-500 mt-2">
-            Register to start using LandVest
+            Register as an agent to start using PropVest
           </p>
         </div>
 

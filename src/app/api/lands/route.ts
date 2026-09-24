@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
       title,
       location,
       state,
+      areaValue,
+      areaUnit,
       acreage,
       price,
       whatsapp,
@@ -91,11 +93,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("===== LIMIT CHECK =====");
-    console.log("Agent Plan:", agent?.plan);
-    console.log("Current Listings:", agent?.listings.length);
-    console.log("Incoming Photos:", images.length);
-    console.log("=======================");
 
     if (!agent) {
       return NextResponse.json(
@@ -182,6 +179,13 @@ export async function POST(req: NextRequest) {
         state: state.trim(),
 
         acreage: Number(acreage) || 0,
+
+        areaValue:
+          areaValue !== undefined && areaValue !== null
+            ? Number(areaValue)
+            : null,
+
+        areaUnit: areaUnit || "acre",
 
         price: price.trim(),
 

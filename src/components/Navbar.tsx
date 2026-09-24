@@ -39,7 +39,7 @@ export default function Navbar() {
           hover:bg-white/60
         "
       >
-        🌿 LandVest 🌿
+        🌿 PropVest 🌿
       </Link>
 
 

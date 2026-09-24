@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
-import ImageCarousel from "@/components/ImageCarousel";
+import LandSearch from "@/components/LandSearch";
 
 export default async function Home() {
   const lands = await prisma.land.findMany({
@@ -15,9 +15,9 @@ export default async function Home() {
 
       {/* HERO */}
       <section style={styles.hero}>
-        <h1 style={styles.title}>🌾 LandVest Malaysia</h1>
+        <h1 style={styles.title}>🌾 PropVest Malaysia</h1>
         <p style={styles.subtitle}>
-          Discover land investment opportunities across Malaysia
+          Discover properties and land investment opportunities across Malaysia
         </p>
 
         <div style={styles.actions}>
@@ -27,44 +27,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* GRID */}
-      <section style={styles.grid}>
-        {lands.map((land) => (
-          <article key={land.id} style={styles.card}>
- 
-	    {/* IMAGE SLIDESHOW */}
-	    <ImageCarousel images={land.images} />
-           
-	    {/* CONTENT */}
-            <div style={styles.content}>
-              <h2 style={styles.cardTitle}>{land.title}</h2>
-
-              <p style={styles.text}>📍 {land.location}</p>
-              <p style={styles.text}>🗺 {land.state}</p>
-              <p style={styles.text}>🌾 {land.acreage} acres</p>
-
-              <p style={styles.price}>{land.price}</p>
-
-              <p style={styles.desc}>{land.description}</p>
-
-              <a
-                href={`https://wa.me/${land.whatsapp}`}
-                target="_blank"
-                style={styles.whatsapp}
-              >
-                WhatsApp Agent
-              </a>
-            </div>
-          </article>
-        ))}
-      </section>
-
-      {/* EMPTY */}
-      {lands.length === 0 && (
-        <div style={styles.empty}>
-          No listings available yet
-        </div>
-      )}
+    <LandSearch lands={lands} />
     </main>
   );
 }

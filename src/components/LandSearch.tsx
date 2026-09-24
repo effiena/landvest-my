@@ -3,6 +3,21 @@
 import { useMemo, useState } from "react";
 import ImageCarousel from "@/components/ImageCarousel";
 
+function formatLandArea(land: any) {
+  const value = land.areaValue ?? land.acreage ?? 0;
+  const unit = land.areaUnit ?? "acre";
+
+  if (unit === "psf") {
+    return `${Number(value).toLocaleString()} PSF`;
+  }
+
+  if (unit === "hektar") {
+    return `${Number(value).toLocaleString()} Hektar`;
+  }
+
+  return `${Number(value).toLocaleString()} Acres`;
+}
+
 export default function LandSearch({ lands }: { lands: any[] }) {
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("all");
@@ -21,16 +36,24 @@ export default function LandSearch({ lands }: { lands: any[] }) {
     const query = search.trim().toLowerCase();
 
     return lands.filter((land) => {
+      const searchableText = [
+        land.title,
+        land.location,
+        land.state,
+        land.description,
+        land.acreage,
+        land.price,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
       const matchesSearch =
-        !query ||
-        land.title?.toLowerCase().includes(query) ||
-        land.location?.toLowerCase().includes(query) ||
-        land.state?.toLowerCase().includes(query) ||
-        land.description?.toLowerCase().includes(query);
+        query === "" || searchableText.includes(query);
 
       const matchesLocation =
         location === "all" ||
-        land.location === location;
+        land.location?.toLowerCase() === location.toLowerCase();
 
       return matchesSearch && matchesLocation;
     });
@@ -97,8 +120,8 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               <h2 style={styles.cardTitle}>{land.title}</h2>
 
               <p style={styles.text}>📍 {land.location}</p>
-              <p style={styles.text}>🗺 {land.state}</p>
-              <p style={styles.text}>🌾 {land.acreage} acres</p>
+              <p style={styles.text}>🗺  {land.state}</p>
+              <p style={styles.text}>🌾 {formatLandArea(land)}</p>
 
               <p style={styles.price}>{land.price}</p>
 
