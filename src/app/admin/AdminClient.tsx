@@ -155,7 +155,56 @@ export default function AdminClient({ lands, agent }: any) {
     });
   };
 
+  const responsiveStyles = `
+    .propvest-admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .propvest-admin-listings {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    @media (max-width: 768px) {
+      .propvest-admin-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+      }
+
+      .propvest-admin-listings {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .propvest-admin-grid,
+      .propvest-admin-listings {
+        width: 100%;
+      }
+
+      input,
+      textarea,
+      select {
+        box-sizing: border-box;
+        max-width: 100%;
+      }
+
+      .propvest-area-row {
+        display: grid !important;
+        grid-template-columns: 1fr 110px !important;
+        gap: 8px !important;
+      }
+    }
+  `;
+
   return (
+    <>
+    <style>{responsiveStyles}</style>
     <div style={styles.page}>
     {/* TOP BAR */}
     <div style={styles.topBar}>
@@ -266,7 +315,7 @@ export default function AdminClient({ lands, agent }: any) {
 
 
       {/* CONTENT GRID */}
-      <div style={styles.grid}>
+      <div className="propvest-admin-grid" style={styles.grid}>
         {/* FORM */}
         <div style={styles.card}>
           <h2 style={styles.cardTitle}>
@@ -364,7 +413,7 @@ export default function AdminClient({ lands, agent }: any) {
         </div>
 
         {/* LISTINGS */}
-        <div style={styles.listings}>
+        <div className="propvest-admin-listings" style={styles.listings}>
           {lands.map((land: any) => (
             <div key={land.id} style={styles.listCard}>
               {/* IMAGE */}
@@ -397,6 +446,7 @@ export default function AdminClient({ lands, agent }: any) {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
