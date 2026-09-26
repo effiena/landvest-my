@@ -2,6 +2,12 @@
 
 import { useEffect } from "react";
 
+declare global {
+  interface Window {
+    adsbygoogle: unknown[];
+  }
+}
+
 export default function GoogleAd() {
   useEffect(() => {
     try {
