@@ -34,7 +34,7 @@ async function verifyPayPalWebhook(
     !transmissionSig ||
     !authAlgo
   ) {
-    throw new Error("Missing PayPal webhook headers");
+    return false;
   }
 
   const verifyResponse = await paypalRequest(
