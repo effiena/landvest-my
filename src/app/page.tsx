@@ -3,6 +3,8 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import LandSearch from "@/components/LandSearch";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const lands = await prisma.land.findMany({
     include: { images: true },
