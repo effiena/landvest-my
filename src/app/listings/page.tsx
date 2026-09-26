@@ -9,7 +9,7 @@ export default async function ListingsPage() {
 
   return (
     <main style={{ padding: 24 }}>
-      <h1>LandVest Listings</h1>
+      <h1>PropVest Listings</h1>
 
       <div style={{ display: "grid", gap: 16 }}>
         {lands.map((land) => (

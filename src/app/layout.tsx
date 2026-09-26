@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 
 export const metadata: Metadata = {
-  title: "LandVest Malaysia",
-  description: "Land marketplace",
+  title: "PropVest Malaysia",
+  description: "Malaysia property and land marketplace for buyers, investors and property agents.",
 };
 
 
