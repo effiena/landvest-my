@@ -14,6 +14,7 @@ export default function PayPalProvider({
         currency: "MYR",
         intent: "subscription",
         vault: true,
+        locale: "en_MY",
       }}
     >
       {children}
