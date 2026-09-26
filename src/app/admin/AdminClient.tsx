@@ -349,7 +349,42 @@ export default function AdminClient({ lands, agent }: any) {
               </select>
             </div>
 
-            <input name="price" placeholder="Price" value={form.price} onChange={handleChange} style={styles.input} />
+            <div style={{ position: "relative" }}>
+              <span
+                style={{
+                  position: "absolute",
+                  left: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontWeight: 700,
+                  color: "#0b1f3a",
+                  pointerEvents: "none",
+                  zIndex: 1,
+                }}
+              >
+                RM
+              </span>
+
+              <input
+                name="price"
+                placeholder="0"
+                value={String(form.price || "").replace(/^RM\s*/i, "")}
+                onChange={(e) => {
+                  const value = e.target.value
+                    .replace(/^RM\s*/i, "")
+                    .replace(/[^0-9.,]/g, "");
+
+                  setForm({
+                    ...form,
+                    price: value,
+                  });
+                }}
+                style={{
+                  ...styles.input,
+                  paddingLeft: 42,
+                }}
+              />
+            </div>
             <input name="whatsapp" placeholder="WhatsApp" value={form.whatsapp} onChange={handleChange} style={styles.input} />
 
             <textarea
@@ -431,7 +466,7 @@ export default function AdminClient({ lands, agent }: any) {
               <h3 style={styles.title}>{land.title}</h3>
               <p style={styles.text}>📍 {land.location}</p>
               <p style={styles.text}>🗺 {land.state}</p>
-              <p style={styles.price}>💰 {land.price}</p>
+              <p style={styles.price}>💰 RM {String(land.price).replace(/^RM\s*/i, "")}</p>
 
               {/* ACTIONS */}
               <div style={styles.actions}>

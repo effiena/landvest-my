@@ -18,6 +18,21 @@ function formatLandArea(land: any) {
   return `${Number(value).toLocaleString()} Acres`;
 }
 
+function formatPrice(price: string) {
+  const raw = String(price ?? "").trim();
+
+  if (!raw) return "";
+
+  const withoutRM = raw.replace(/^RM\s*/i, "").trim();
+  const numeric = Number(withoutRM.replace(/,/g, ""));
+
+  if (Number.isFinite(numeric)) {
+    return `RM ${numeric.toLocaleString("en-MY")}`;
+  }
+
+  return `RM ${withoutRM}`;
+}
+
 export default function LandSearch({ lands }: { lands: any[] }) {
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("all");
@@ -123,7 +138,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               <p style={styles.text}>🗺  {land.state}</p>
               <p style={styles.text}>🌾 {formatLandArea(land)}</p>
 
-              <p style={styles.price}>{land.price}</p>
+              <p style={styles.price}>RM {land.price.replace(/^RM\s*/i, "")}</p>
 
               <p style={styles.desc}>{land.description}</p>
 
