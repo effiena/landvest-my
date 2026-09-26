@@ -30,7 +30,6 @@ export async function getPayPalAccessToken() {
 
 
   const data = await response.json();
-  console.log("PayPal Token Response:", data);
   if (!response.ok) {
     throw new Error(JSON.stringify(data));
   }
