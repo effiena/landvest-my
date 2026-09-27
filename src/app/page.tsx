@@ -22,6 +22,9 @@ export default async function Home() {
             PropVest Malaysia
           </h1>
 
+          <p style={styles.formerBrand}>
+            Formerly known as LandVest
+          </p>
 
           <p style={styles.heroSubtitle}>
             Discover Home. Explores Land. Unlock Opportunities.
@@ -188,6 +191,14 @@ heroTitle: {
   letterSpacing: "-1.5px",
   textAlign: "center",
   color: "#0B2A5B",
+},
+
+formerBrand: {
+  marginTop: 8,
+  marginBottom: 0,
+  fontSize: "clamp(12px, 2.5vw, 14px)",
+  color: "#64748B",
+  fontStyle: "italic",
 },
 
 heroSubtitle: {
