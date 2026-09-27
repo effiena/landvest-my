@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import LandSearch from "@/components/LandSearch";
+import SellPropertyPopup from "@/components/SellPropertyPopup";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,8 @@ export default async function Home() {
       </section>
 
     <LandSearch lands={lands} />
+
+    <SellPropertyPopup />
     </main>
   );
 }
