@@ -638,9 +638,28 @@ const styles: any = {
     color: "#999",
   },
 
-  title: { margin: "10px 0 5px" },
-  text: { fontSize: 13, color: "#555" },
-  price: { fontWeight: "bold", marginTop: 5 },
+  title: {
+    margin: "10px 0 5px",
+    color: "#000000",
+    fontSize: 18,
+    fontWeight: 700,
+    lineHeight: 1.3,
+    overflowWrap: "anywhere",
+  },
+
+  text: {
+    fontSize: 13,
+    color: "#000000",
+    lineHeight: 1.5,
+    overflowWrap: "anywhere",
+  },
+
+  price: {
+    fontWeight: "bold",
+    marginTop: 5,
+    color: "#1E3A8A",
+    fontSize: 16,
+  },
 
   actions: {
     display: "flex",

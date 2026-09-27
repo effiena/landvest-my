@@ -265,10 +265,12 @@ const styles: any = {
   cardTitle: {
     fontSize: 20,
     marginBottom: 10,
+    color: "#000000",
+    fontWeight: 700,
   },
 
   text: {
-    color: "#475569",
+    color: "#000000",
     fontSize: 14,
   },
 
