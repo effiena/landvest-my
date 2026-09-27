@@ -51,9 +51,7 @@ export default function Navbar() {
               Login
             </Link>
 
-            <Link href="/register" style={styles.btnOutline}>
-              Register
-            </Link>
+            {/* Agent registration is currently closed */}
           </>
         ) : (
           <>

@@ -34,7 +34,7 @@ export default async function Home() {
 
         <div style={styles.actions}>
           <Link href="/login" style={styles.btnDark}>Login</Link>
-          <Link href="/register" style={styles.btnYellow}>Register</Link>
+          <></>
           <Link href="/admin" style={styles.btnBlue}>Dashboard</Link>
         </div>
       </section>
