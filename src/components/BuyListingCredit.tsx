@@ -74,11 +74,23 @@ export default function BuyListingCredit({
         borderRadius: 8,
       }}
     >
-      <h4>
+      <h4
+        style={{
+          margin: "0 0 10px",
+          color: "#000000",
+          fontSize: 18,
+        }}
+      >
         Buy 1 Extra Listing
       </h4>
 
-      <p>
+      <p
+        style={{
+          margin: "0 0 15px",
+          color: "#000000",
+          fontSize: 15,
+        }}
+      >
         Price:{" "}
         <b>RM {price}</b>
       </p>
