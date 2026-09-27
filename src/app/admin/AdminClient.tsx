@@ -256,7 +256,7 @@ export default function AdminClient({ lands, agent }: any) {
 
       {/* PLAN OPTIONS */}
 
-      {agent?.plan !== "professional" && (
+      {agent?.plan !== "professional" && agent?.plan !== "ceo" && (
       <div style={styles.warning}>
 
       <h3>
@@ -281,6 +281,7 @@ export default function AdminClient({ lands, agent }: any) {
 
       {/* EXTRA LISTING PURCHASE */}
 
+      {agent?.plan !== "ceo" && (
       <div style={{
         background:"#fff7ed",
         padding:15,
@@ -325,6 +326,7 @@ export default function AdminClient({ lands, agent }: any) {
 
 
       </div>
+      )}
 
 
 
