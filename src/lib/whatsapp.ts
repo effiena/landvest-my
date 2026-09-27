@@ -14,12 +14,24 @@ export function normalizeWhatsAppNumber(
   }
 
   if (!value.startsWith("60")) {
-    throw new Error("Invalid Malaysian WhatsApp number");
+    throw new Error(
+      "Invalid Malaysian WhatsApp number"
+    );
   }
 
   if (!/^601[0-9]{7,9}$/.test(value)) {
-    throw new Error("Invalid Malaysian WhatsApp number");
+    throw new Error(
+      "Invalid Malaysian WhatsApp number"
+    );
   }
 
   return value;
+}
+
+export function getWhatsAppLink(
+  phone: string
+): string {
+  return `https://wa.me/${normalizeWhatsAppNumber(
+    phone
+  )}`;
 }
