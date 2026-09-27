@@ -24,3 +24,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* PropVest Dashboard form visibility */
+.propvest-admin-form input::placeholder,
+.propvest-admin-form textarea::placeholder {
+  color: #666666 !important;
+  opacity: 1 !important;
+}
+
+.propvest-admin-form input,
+.propvest-admin-form textarea,
+.propvest-admin-form select {
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+.propvest-admin-form option {
+  color: #000000 !important;
+  background: #ffffff !important;
+}

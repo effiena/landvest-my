@@ -322,7 +322,7 @@ export default function AdminClient({ lands, agent }: any) {
             {editingLand ? "✏️ Edit Listing" : "➕ Create Listing"}
           </h2>
 
-          <div style={styles.form}>
+          <div className="propvest-admin-form" style={styles.form}>
             <input name="title" placeholder="Title" value={form.title} onChange={handleChange} style={styles.input} />
             <input name="location" placeholder="Location" value={form.location} onChange={handleChange} style={styles.input} />
             <input name="state" placeholder="State" value={form.state} onChange={handleChange} style={styles.input} />
@@ -583,6 +583,9 @@ const styles: any = {
     padding: 10,
     borderRadius: 6,
     border: "1px solid #ddd",
+    background: "#ffffff",
+    color: "#000000",
+    WebkitTextFillColor: "#000000",
   },
 
   textarea: {
@@ -590,6 +593,9 @@ const styles: any = {
     borderRadius: 6,
     border: "1px solid #ddd",
     minHeight: 80,
+    background: "#ffffff",
+    color: "#000000",
+    WebkitTextFillColor: "#000000",
   },
 
   primaryBtn: {
@@ -687,6 +693,9 @@ const styles: any = {
     border: "1px solid #ddd",
     borderRadius: 8,
     fontSize: 14,
+    background: "#ffffff",
+    color: "#000000",
+    WebkitTextFillColor: "#000000",
   },
 
   areaSelect: {
@@ -695,7 +704,8 @@ const styles: any = {
     border: "1px solid #ddd",
     borderRadius: 8,
     fontSize: 14,
-    background: "#fff",
+    background: "#ffffff",
+    color: "#000000",
   },
 
   hiddenFileInput: {
