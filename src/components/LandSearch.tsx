@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ImageCarousel from "@/components/ImageCarousel";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 
 function formatLandArea(land: any) {
   const value = land.areaValue ?? land.acreage ?? 0;
@@ -143,7 +144,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               <p style={styles.desc}>{land.description}</p>
 
               <a
-                href={`https://wa.me/${land.whatsapp}`}
+                href={getWhatsAppLink(land.whatsapp)}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={styles.whatsapp}

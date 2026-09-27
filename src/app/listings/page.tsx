@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 
 export default async function ListingsPage() {
   const lands = await prisma.land.findMany({
@@ -29,7 +30,7 @@ export default async function ListingsPage() {
             <p style={{ marginTop: 8 }}>{land.description}</p>
 
             <a
-              href={`https://wa.me/${land.whatsapp}`}
+              href={getWhatsAppLink(land.whatsapp)}
               target="_blank"
               style={{
                 display: "inline-block",
@@ -40,7 +41,7 @@ export default async function ListingsPage() {
                 borderRadius: 6,
               }}
             >
-              Contact Investor
+              Contact Agent
             </a>
           </div>
         ))}
