@@ -273,27 +273,31 @@ export default function AdminClient({ lands, agent }: any) {
         background:"#fff7ed",
         padding:15,
         borderRadius:8,
-        marginBottom:15
+        marginBottom:15,
+        color:"#000000"
       }}>
 
-      <h3>
+      <h3 style={{
+        color:"#000000",
+        marginTop:0
+      }}>
       ➕ Need More Listings?
       </h3>
 
 
-      <p>
+      <p style={{ color:"#000000" }}>
         Current Plan: <b>{agent?.plan}</b>
       </p>
 
 
-      <p>
+      <p style={{ color:"#000000" }}>
         Additional listing price:
       </p>
 
 
-      <ul>
+      <ul style={{ color:"#000000" }}>
 
-      <li>
+      <li style={{ color:"#000000" }}>
       {agent?.plan === "professional"
         ? "Professional: RM1.70 / listing"
         : "Starter: RM2.90 / listing"}
@@ -575,7 +579,10 @@ const styles: any = {
     borderRadius: 10,
   },
 
-  cardTitle: { marginBottom: 10 },
+  cardTitle: {
+    marginBottom: 10,
+    color: "#000000",
+  },
 
   form: { display: "flex", flexDirection: "column", gap: 8 },
 
