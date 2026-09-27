@@ -282,10 +282,12 @@ const styles: any = {
   desc: {
     marginTop: 12,
     fontSize: 15,
-    color: "#475569",
-    lineHeight: "1.8",
+    color: "#000000",
+    lineHeight: "1.7",
     whiteSpace: "pre-line",
-    textAlign: "justify",
+    overflowWrap: "anywhere",
+    wordBreak: "break-word",
+    textAlign: "left",
   },
 
   whatsapp: {

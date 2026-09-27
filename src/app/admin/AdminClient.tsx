@@ -403,9 +403,10 @@ export default function AdminClient({ lands, agent }: any) {
               <input
                 id="photo-upload"
                 type="file"
+                accept="image/*"
                 multiple
                 onChange={(e) => setFiles(e.target.files)}
-                style={{ display: "none" }}
+                style={styles.hiddenFileInput}
               />
 
               <span style={styles.fileName}>
@@ -676,6 +677,18 @@ const styles: any = {
     borderRadius: 8,
     fontSize: 14,
     background: "#fff",
+  },
+
+  hiddenFileInput: {
+    position: "absolute",
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    border: 0,
   },
 
   fileUpload: {
