@@ -45,7 +45,12 @@ export default function AdminClient({ lands, agent }: any) {
   // PLAN LOGIC
 
 
-  const baseLimit = agent?.plan === "professional" ? 10 : 3;
+  const baseLimit =
+    agent?.plan === "ceo"
+      ? 500
+      : agent?.plan === "professional"
+        ? 10
+        : 3;
 
   const extraListings = agent?.extraListings || 0;
 
@@ -82,15 +87,22 @@ export default function AdminClient({ lands, agent }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const photoLimit = agent?.plan === "professional" ? 20 : 3;
+    const photoLimit =
+      agent?.plan === "ceo"
+        ? 20
+        : agent?.plan === "professional"
+          ? 20
+          : 3;
 
 
     if (!editingLand && !canCreate) {
 
       const extraPrice =
-        agent?.plan === "professional"
-          ? "RM1.70"
-          : "RM2.90";
+        agent?.plan === "ceo"
+          ? "N/A"
+          : agent?.plan === "professional"
+            ? "RM1.70"
+            : "RM2.90";
 
 
       alert(

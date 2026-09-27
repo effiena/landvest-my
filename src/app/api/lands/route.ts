@@ -112,7 +112,11 @@ export async function POST(req: NextRequest) {
     const isMasterlister = agent.role === "masterlister";
 
     const baseListingLimit =
-      agent.plan === "professional" ? 10 : 3;
+      agent.plan === "ceo"
+        ? 500
+        : agent.plan === "professional"
+          ? 10
+          : 3;
 
     const listingLimit = isMasterlister
       ? Infinity
@@ -120,9 +124,11 @@ export async function POST(req: NextRequest) {
 
     const photoLimit = isMasterlister
       ? Infinity
-      : agent.plan === "professional"
+      : agent.plan === "ceo"
         ? 20
-        : 3;
+        : agent.plan === "professional"
+          ? 20
+          : 3;
 
     console.log("===== FINAL LIMIT CHECK =====");
     console.log("Agent:", agent.email);
