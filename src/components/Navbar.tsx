@@ -45,6 +45,10 @@ export default function Navbar() {
 
       {/* RIGHT BUTTONS */}
       <div style={styles.right}>
+        <Link href="/want-to-buy" style={styles.wtbBtn}>
+          Want To Buy
+        </Link>
+
         {!isLoggedIn ? (
           <>
             <Link href="/login" style={styles.btn}>
@@ -94,6 +98,15 @@ const styles: any = {
     display: "flex",
     gap: 12,
     alignItems: "center",
+  },
+
+  wtbBtn: {
+    background: "#1E3A8A",
+    color: "#FFFFFF",
+    padding: "8px 14px",
+    borderRadius: 6,
+    fontWeight: "bold",
+    textDecoration: "none",
   },
 
   btn: {

@@ -27,6 +27,31 @@ model Agent {
   listings              Land[]
   purchases             ListingCreditPurchase[]
   subscription          Subscription?
+  wantToBuy             WantToBuy[]             @relation("AssignedWantToBuy")
+}
+
+model WantToBuy {
+  id                     Int      @id @default(autoincrement())
+  buyerName              String
+  whatsapp               String
+  city                   String
+  propertyType           String?
+  requiredSize           String?
+  budget                 String?
+  basicSalary            Float?
+  bankCommitment         Float?
+  ctosCcrisStatus        String?
+  loanTenure             Int?
+  interestRate           Float?
+  maxDsr                 Float?
+  availableMonthly       Float?
+  estimatedLoan          Float?
+  estimatedPropertyPrice Float?
+  additionalRequirements String?
+  assignedAgentId        Int?
+  status                 String   @default("new")
+  createdAt              DateTime @default(now())
+  assignedAgent          Agent?   @relation("AssignedWantToBuy", fields: [assignedAgentId], references: [id])
 }
 
 model Subscription {

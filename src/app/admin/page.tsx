@@ -54,6 +54,12 @@ export default async function AdminDashboard() {
           createdAt: "desc",
         },
       },
+
+      wantToBuy: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
     },
   });
 
@@ -73,6 +79,7 @@ export default async function AdminDashboard() {
     <AdminClient
       agent={agent}
       lands={agent.listings}
+      wantToBuy={agent.wantToBuy}
     />
   );
 }

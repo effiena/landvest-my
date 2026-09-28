@@ -33,9 +33,17 @@ export default async function Home() {
         </div>
 
         <div style={styles.actions}>
-          <Link href="/login" style={styles.btnDark}>Login</Link>
-          <></>
-          <Link href="/admin" style={styles.btnBlue}>Dashboard</Link>
+          <Link href="/want-to-buy" style={styles.btnWantToBuy}>
+            I Want To Buy
+          </Link>
+
+          <Link href="/login" style={styles.btnDark}>
+            Login
+          </Link>
+
+          <Link href="/admin" style={styles.btnBlue}>
+            Dashboard
+          </Link>
         </div>
       </section>
 
@@ -80,6 +88,15 @@ hero: {
     justifyContent: "center",
     gap: 12,
     flexWrap: "wrap",
+  },
+
+  btnWantToBuy: {
+    padding: "10px 16px",
+    background: "#1E3A8A",
+    color: "#FFFFFF",
+    borderRadius: 8,
+    textDecoration: "none",
+    fontWeight: "bold",
   },
 
   btnDark: {

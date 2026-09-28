@@ -1,0 +1,602 @@
+"use client";
+
+import { useMemo, useState } from "react";
+
+const SHARED_AREAS = [
+  "Johor Bahru",
+  "Permas Jaya",
+  "Johor Jaya",
+  "Ulu Tiram",
+  "Plentong",
+];
+
+const WEST_AREAS = [
+  "Iskandar Puteri",
+  "Gelang Patah",
+  "Skudai",
+  "Senai",
+  "Kulai",
+  "Pontian",
+  "Benut",
+  "Rengit",
+  "Batu Pahat",
+  "Kluang",
+  "Muar",
+  "Tangkak",
+  "Segamat",
+];
+
+const EAST_AREAS = [
+  "Pasir Gudang",
+  "Masai",
+  "Kota Tinggi",
+  "Bandar Penawar",
+  "Desaru",
+  "Pengerang",
+  "Mersing",
+];
+
+function money(value: number) {
+  return `RM ${value.toLocaleString("en-MY", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+function calculateLoan(
+  monthlyPayment: number,
+  annualRate: number,
+  years: number
+) {
+  if (monthlyPayment <= 0 || years <= 0) return 0;
+
+  const monthlyRate = annualRate / 100 / 12;
+  const months = years * 12;
+
+  if (monthlyRate === 0) return monthlyPayment * months;
+
+  return (
+    monthlyPayment *
+    ((1 - Math.pow(1 + monthlyRate, -months)) / monthlyRate)
+  );
+}
+
+export default function WantToBuyPage() {
+  const [form, setForm] = useState({
+    buyerName: "",
+    whatsapp: "",
+    city: "",
+    propertyType: "",
+    requiredSize: "",
+    budget: "",
+    netIncome: "",
+    creditCardBalance: "",
+    monthlyLoanRepayment: "",
+    ctosCcrisStatus: "",
+    loanTenure: "30",
+    interestRate: "4.3",
+    additionalRequirements: "",
+    selectedAgentId: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const areaType = useMemo(() => {
+    if (SHARED_AREAS.includes(form.city)) return "shared";
+    if (WEST_AREAS.includes(form.city)) return "west";
+    if (EAST_AREAS.includes(form.city)) return "east";
+    return "";
+  }, [form.city]);
+
+  const loan = useMemo(() => {
+    const netIncome = Number(form.netIncome) || 0;
+    const creditCardBalance = Number(form.creditCardBalance) || 0;
+    const monthlyLoanRepayment =
+      Number(form.monthlyLoanRepayment) || 0;
+
+    // Indicative credit-card monthly commitment.
+    // Actual bank treatment may vary.
+    const creditCardCommitment = creditCardBalance * 0.05;
+
+    const totalExistingCommitments =
+      creditCardCommitment + monthlyLoanRepayment;
+
+    // Indicative maximum DSR assumption.
+    const dsr = netIncome * 0.6;
+
+    // Amount potentially available for a new housing instalment.
+    const available = Math.max(
+      0,
+      dsr - totalExistingCommitments
+    );
+
+    const estimatedLoan = calculateLoan(
+      available,
+      Number(form.interestRate) || 4.3,
+      Number(form.loanTenure) || 30
+    );
+
+    return {
+      dsr,
+      creditCardCommitment,
+      monthlyLoanRepayment,
+      totalExistingCommitments,
+      available,
+      estimatedLoan,
+      propertyPrice: estimatedLoan / 0.9,
+    };
+  }, [
+    form.netIncome,
+    form.creditCardBalance,
+    form.monthlyLoanRepayment,
+    form.loanTenure,
+    form.interestRate,
+  ]);
+
+  const update = (name: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!form.buyerName || !form.whatsapp || !form.city) {
+      setError("Please complete your name, WhatsApp and preferred area.");
+      return;
+    }
+
+    if (areaType === "shared" && !form.selectedAgentId) {
+      setError("Please choose Yoori or Della for this area.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/want-to-buy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          maxDsr: 60,
+          availableMonthly: loan.available,
+          estimatedLoan: loan.estimatedLoan,
+          estimatedPropertyPrice: loan.propertyPrice,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Unable to submit your enquiry.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError("Unable to submit your enquiry. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <main style={styles.page}>
+        <div style={styles.successCard}>
+          <div style={{ fontSize: 50 }}>✅</div>
+          <h1>Enquiry Submitted</h1>
+          <p>
+            Thank you. Our property consultant will contact you through
+            WhatsApp regarding your requirements.
+          </p>
+
+          <button
+            onClick={() => window.location.href = "/"}
+            style={styles.primary}
+          >
+            Back to PropVest
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main style={styles.page}>
+      <div style={styles.container}>
+        <div style={styles.hero}>
+          <div style={styles.badge}>PROPVEST MALAYSIA</div>
+          <h1>Want To Buy?</h1>
+          <p>
+            Tell us what property or land you are looking for and our
+            consultant will help match your requirements.
+          </p>
+        </div>
+
+        <form onSubmit={submit}>
+          <section style={styles.card}>
+            <h2>👤 Buyer Information</h2>
+
+            <label style={styles.label}>Name *</label>
+            <input
+              value={form.buyerName}
+              onChange={(e) => update("buyerName", e.target.value)}
+              placeholder="Your name"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>WhatsApp *</label>
+            <input
+              value={form.whatsapp}
+              onChange={(e) => update("whatsapp", e.target.value)}
+              placeholder="e.g. 60123456789"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>
+              Monthly Net Income (After Tax / EPF / SOCSO) (RM)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={form.netIncome}
+              onChange={(e) => update("netIncome", e.target.value)}
+              placeholder="e.g. 5000"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>
+              Outstanding Credit Card Balance (RM)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={form.creditCardBalance}
+              onChange={(e) =>
+                update("creditCardBalance", e.target.value)
+              }
+              placeholder="e.g. 5000"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>
+              Existing Monthly Loan Repayment (RM)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={form.monthlyLoanRepayment}
+              onChange={(e) =>
+                update("monthlyLoanRepayment", e.target.value)
+              }
+              placeholder="e.g. 1500"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>CTOS / CCRIS Status</label>
+            <select
+              value={form.ctosCcrisStatus}
+              onChange={(e) => update("ctosCcrisStatus", e.target.value)}
+              style={styles.input}
+            >
+              <option value="">Select status</option>
+              <option>Healthy</option>
+              <option>Not Healthy</option>
+              <option>Prefer not to say</option>
+            </select>
+          </section>
+
+          <section style={styles.card}>
+            <h2>🏠 Property Requirement</h2>
+
+            <label style={styles.label}>Preferred City / Area *</label>
+            <select
+              value={form.city}
+              onChange={(e) => {
+                update("city", e.target.value);
+                update("selectedAgentId", "");
+              }}
+              style={styles.input}
+            >
+              <option value="">Select area</option>
+              <optgroup label="Shared — Choose Yoori or Della">
+                {SHARED_AREAS.map((area) => (
+                  <option key={area}>{area}</option>
+                ))}
+              </optgroup>
+              <optgroup label="West — Yoori">
+                {WEST_AREAS.map((area) => (
+                  <option key={area}>{area}</option>
+                ))}
+              </optgroup>
+              <optgroup label="East — Della">
+                {EAST_AREAS.map((area) => (
+                  <option key={area}>{area}</option>
+                ))}
+              </optgroup>
+            </select>
+
+            {areaType === "west" && (
+              <div style={styles.assignment}>
+                Assigned Agent: <strong>Yoori</strong>
+              </div>
+            )}
+
+            {areaType === "east" && (
+              <div style={styles.assignment}>
+                Assigned Agent: <strong>Della</strong>
+              </div>
+            )}
+
+            {areaType === "shared" && (
+              <>
+                <label style={styles.label}>Choose Agent *</label>
+                <select
+                  value={form.selectedAgentId}
+                  onChange={(e) =>
+                    update("selectedAgentId", e.target.value)
+                  }
+                  style={styles.input}
+                >
+                  <option value="">Choose Yoori or Della</option>
+                  <option value="11">Yoori</option>
+                  <option value="12">Della</option>
+                </select>
+              </>
+            )}
+
+            <label style={styles.label}>Property / Land Type</label>
+            <input
+              value={form.propertyType}
+              onChange={(e) => update("propertyType", e.target.value)}
+              placeholder="e.g. Land, Terrace, Semi-D, Commercial"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>Required Size</label>
+            <input
+              value={form.requiredSize}
+              onChange={(e) => update("requiredSize", e.target.value)}
+              placeholder="e.g. 2,000 sqft / 5 acres"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>Budget</label>
+            <input
+              value={form.budget}
+              onChange={(e) => update("budget", e.target.value)}
+              placeholder="e.g. RM500,000"
+              style={styles.input}
+            />
+
+            <label style={styles.label}>Additional Requirements</label>
+            <textarea
+              value={form.additionalRequirements}
+              onChange={(e) =>
+                update("additionalRequirements", e.target.value)
+              }
+              placeholder="Tell us anything else you need..."
+              style={styles.textarea}
+            />
+          </section>
+
+          <section style={styles.card}>
+            <h2>🏦 Indicative Loan Eligibility</h2>
+
+            <p style={styles.note}>
+              Estimate only. This uses a 60% DSR assumption and does not
+              guarantee bank approval.
+            </p>
+
+            <div style={styles.row}>
+              <div>
+                <label style={styles.label}>Loan Tenure</label>
+                <select
+                  value={form.loanTenure}
+                  onChange={(e) => update("loanTenure", e.target.value)}
+                  style={styles.input}
+                >
+                  <option value="30">30 years</option>
+                  <option value="35">35 years</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={styles.label}>Interest Rate</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={form.interestRate}
+                  onChange={(e) =>
+                    update("interestRate", e.target.value)
+                  }
+                  style={styles.input}
+                />
+              </div>
+            </div>
+
+            <div style={styles.calculator}>
+              <div>
+                <span>Indicative maximum DSR (60%)</span>
+                <strong>{money(loan.dsr)}</strong>
+              </div>
+
+              <div>
+                <span>Estimated credit card commitment (5%)</span>
+                <strong>
+                  {money(
+                    (Number(form.creditCardBalance) || 0) * 0.05
+                  )}
+                </strong>
+              </div>
+
+              <div>
+                <span>Existing monthly loan repayment</span>
+                <strong>
+                  {money(Number(form.monthlyLoanRepayment) || 0)}
+                </strong>
+              </div>
+
+              <div>
+                <span>Available housing instalment</span>
+                <strong>{money(loan.available)}</strong>
+              </div>
+
+              <div>
+                <span>Estimated loan eligibility</span>
+                <strong>{money(loan.estimatedLoan)}</strong>
+              </div>
+
+              <div>
+                <span>Indicative property price (90% financing)</span>
+                <strong>{money(loan.propertyPrice)}</strong>
+              </div>
+            </div>
+          </section>
+
+          {error && <div style={styles.error}>{error}</div>}
+
+          <button disabled={loading} type="submit" style={styles.submit}>
+            {loading ? "Submitting..." : "Submit Want To Buy Enquiry"}
+          </button>
+
+          <p style={styles.privacy}>
+            Your net income, credit card balance, loan repayment and CTOS/CCRIS information is private
+            and only used by the assigned property consultant for enquiry
+            assessment.
+          </p>
+        </form>
+      </div>
+    </main>
+  );
+}
+
+const styles: any = {
+  page: {
+    minHeight: "100vh",
+    background: "#f4f6fb",
+    padding: "30px 16px 60px",
+    fontFamily: "Arial, sans-serif",
+  },
+  container: {
+    maxWidth: 760,
+    margin: "0 auto",
+  },
+  hero: {
+    textAlign: "center",
+    marginBottom: 25,
+  },
+  badge: {
+    display: "inline-block",
+    background: "#111827",
+    color: "#FACC15",
+    padding: "6px 12px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: "bold",
+  },
+  card: {
+    background: "#fff",
+    padding: 22,
+    borderRadius: 14,
+    marginBottom: 18,
+    boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+  },
+  label: {
+    display: "block",
+    marginTop: 12,
+    marginBottom: 5,
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#374151",
+  },
+  input: {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: 11,
+    border: "1px solid #d1d5db",
+    borderRadius: 8,
+    background: "#fff",
+    color: "#111827",
+  },
+  textarea: {
+    width: "100%",
+    boxSizing: "border-box",
+    minHeight: 100,
+    padding: 11,
+    border: "1px solid #d1d5db",
+    borderRadius: 8,
+    background: "#fff",
+    color: "#111827",
+  },
+  assignment: {
+    marginTop: 10,
+    padding: 12,
+    borderRadius: 8,
+    background: "#fef3c7",
+    color: "#92400e",
+  },
+  row: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+  },
+  calculator: {
+    marginTop: 18,
+    display: "grid",
+    gap: 10,
+  },
+  note: {
+    fontSize: 13,
+    color: "#6b7280",
+  },
+  error: {
+    background: "#fee2e2",
+    color: "#991b1b",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  submit: {
+    width: "100%",
+    padding: 14,
+    border: "none",
+    borderRadius: 9,
+    background: "#FACC15",
+    color: "#111827",
+    fontWeight: "bold",
+    fontSize: 16,
+    cursor: "pointer",
+  },
+  primary: {
+    marginTop: 15,
+    padding: "12px 20px",
+    border: "none",
+    borderRadius: 8,
+    background: "#FACC15",
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+  successCard: {
+    maxWidth: 600,
+    margin: "80px auto",
+    background: "#fff",
+    padding: 35,
+    borderRadius: 16,
+    textAlign: "center",
+  },
+  privacy: {
+    textAlign: "center",
+    color: "#6b7280",
+    fontSize: 12,
+    marginTop: 12,
+  },
+};

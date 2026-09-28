@@ -8,7 +8,7 @@ import DeleteButton from "./components/DeleteButton";
 import PayPalUpgrade from "@/components/PayPalUpgrade";
 import BuyListingCredit from "@/components/BuyListingCredit";
 
-export default function AdminClient({ lands, agent }: any) {
+export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
 
   const router = useRouter();
 
@@ -42,6 +42,34 @@ export default function AdminClient({ lands, agent }: any) {
   const [importLoading, setImportLoading] = useState(false);
   const [editingLand, setEditingLand] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState<number | null>(null);
+
+  const updateWantToBuyStatus = async (id: number, status: string) => {
+    setStatusLoading(id);
+
+    try {
+      const res = await fetch(`/api/want-to-buy/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Unable to update status.");
+        return;
+      }
+
+      window.location.reload();
+    } catch {
+      alert("Unable to update enquiry status.");
+    } finally {
+      setStatusLoading(null);
+    }
+  };
 
   // PLAN LOGIC
 
@@ -334,6 +362,162 @@ export default function AdminClient({ lands, agent }: any) {
 
 
 
+      {/* WANT TO BUY ENQUIRIES */}
+      <div style={styles.wtbSection}>
+        <div style={styles.wtbHeader}>
+          <div>
+            <h2 style={styles.wtbTitle}>🛒 Want To Buy Enquiries</h2>
+            <p style={styles.wtbSub}>
+              Buyer enquiries assigned to {agent?.name}
+            </p>
+          </div>
+
+          <span style={styles.wtbCount}>
+            {wantToBuy.length} {wantToBuy.length === 1 ? "Enquiry" : "Enquiries"}
+          </span>
+        </div>
+
+        {wantToBuy.length === 0 ? (
+          <div style={styles.wtbEmpty}>
+            No Want To Buy enquiries yet.
+          </div>
+        ) : (
+          <div style={styles.wtbList}>
+            {wantToBuy.map((buyer: any) => (
+              <div key={buyer.id} style={styles.wtbCard}>
+                <div style={styles.wtbCardTop}>
+                  <div>
+                    <h3 style={styles.wtbBuyer}>
+                      👤 {buyer.buyerName}
+                    </h3>
+                    <p style={styles.wtbMeta}>
+                      📅 {new Date(buyer.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <select
+                    value={buyer.status || "new"}
+                    disabled={statusLoading === buyer.id}
+                    onChange={(e) =>
+                      updateWantToBuyStatus(buyer.id, e.target.value)
+                    }
+                    style={styles.wtbStatusSelect}
+                  >
+                    <option value="new">🆕 New</option>
+                    <option value="contacted">📞 Contacted</option>
+                    <option value="closed">✅ Closed</option>
+                  </select>
+                </div>
+
+                <div style={styles.wtbGrid}>
+                  <div>
+                    <strong>📱 WhatsApp</strong>
+                    <p>{buyer.whatsapp}</p>
+                  </div>
+
+                  <div>
+                    <strong>📍 Preferred Area</strong>
+                    <p>{buyer.city}</p>
+                  </div>
+
+                  <div>
+                    <strong>🏠 Property / Land Type</strong>
+                    <p>{buyer.propertyType || "Not specified"}</p>
+                  </div>
+
+                  <div>
+                    <strong>📐 Required Size</strong>
+                    <p>{buyer.requiredSize || "Not specified"}</p>
+                  </div>
+
+                  <div>
+                    <strong>💰 Budget</strong>
+                    <p>{buyer.budget || "Not specified"}</p>
+                  </div>
+
+                  <div>
+                    <strong>💵 Basic Salary</strong>
+                    <p>
+                      {buyer.basicSalary != null
+                        ? `RM ${Number(buyer.basicSalary).toLocaleString()} / month`
+                        : "Not provided"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong>🏦 Bank Commitment</strong>
+                    <p>
+                      {buyer.bankCommitment != null
+                        ? `RM ${Number(buyer.bankCommitment).toLocaleString()} / month`
+                        : "Not provided"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong>📊 CTOS / CCRIS</strong>
+                    <p>{buyer.ctosCcrisStatus || "Not provided"}</p>
+                  </div>
+
+                  <div>
+                    <strong>🧮 Estimated Loan</strong>
+                    <p>
+                      {buyer.estimatedLoan != null
+                        ? `RM ${Number(buyer.estimatedLoan).toLocaleString()}`
+                        : "Not calculated"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong>🏡 Estimated Property Price</strong>
+                    <p>
+                      {buyer.estimatedPropertyPrice != null
+                        ? `RM ${Number(buyer.estimatedPropertyPrice).toLocaleString()}`
+                        : "Not calculated"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong>📈 Available Monthly</strong>
+                    <p>
+                      {buyer.availableMonthly != null
+                        ? `RM ${Number(buyer.availableMonthly).toLocaleString()}`
+                        : "Not calculated"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <strong>📊 Max DSR</strong>
+                    <p>
+                      {buyer.maxDsr != null
+                        ? `${Number(buyer.maxDsr).toLocaleString()}%`
+                        : "Not specified"}
+                    </p>
+                  </div>
+                </div>
+
+                {buyer.additionalRequirements && (
+                  <div style={styles.wtbRequirements}>
+                    <strong>📝 Additional Requirements</strong>
+                    <p>{buyer.additionalRequirements}</p>
+                  </div>
+                )}
+
+                <div style={styles.wtbActions}>
+                  <a
+                    href={`https://wa.me/${String(buyer.whatsapp).replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={styles.wtbWhatsapp}
+                  >
+                    💬 Contact Buyer
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* CONTENT GRID */}
       <div className="propvest-admin-grid" style={styles.grid}>
         {/* FORM */}
@@ -511,6 +695,128 @@ export default function AdminClient({ lands, agent }: any) {
 
 /* ================= DESIGN ================= */
 const styles: any = {
+  wtbSection: {
+    background: "#ffffff",
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+  },
+
+  wtbHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 15,
+    flexWrap: "wrap",
+  },
+
+  wtbTitle: {
+    margin: 0,
+    color: "#0b1f3a",
+  },
+
+  wtbSub: {
+    margin: "5px 0 0",
+    color: "#666",
+    fontSize: 14,
+  },
+
+  wtbCount: {
+    background: "#1E3A8A",
+    color: "#fff",
+    padding: "6px 12px",
+    borderRadius: 20,
+    fontSize: 13,
+    fontWeight: "bold",
+  },
+
+  wtbEmpty: {
+    padding: 20,
+    background: "#f4f6fb",
+    borderRadius: 8,
+    color: "#666",
+  },
+
+  wtbList: {
+    display: "grid",
+    gap: 15,
+  },
+
+  wtbCard: {
+    border: "1px solid #e5e7eb",
+    borderRadius: 10,
+    padding: 16,
+    background: "#fafafa",
+  },
+
+  wtbCardTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 15,
+  },
+
+  wtbBuyer: {
+    margin: 0,
+    color: "#111827",
+  },
+
+  wtbMeta: {
+    margin: "5px 0 0",
+    color: "#777",
+    fontSize: 12,
+  },
+
+  wtbStatusSelect: {
+    background: "#FACC15",
+    color: "#111827",
+    padding: "6px 10px",
+    borderRadius: 15,
+    border: "1px solid #e5b800",
+    fontSize: 12,
+    fontWeight: "bold",
+    cursor: "pointer",
+  },
+
+  wtbGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
+    gap: 12,
+  },
+
+  wtbGridItem: {
+    background: "#fff",
+    padding: 10,
+    borderRadius: 7,
+  },
+
+  wtbRequirements: {
+    marginTop: 15,
+    padding: 12,
+    background: "#fff",
+    borderRadius: 8,
+  },
+
+  wtbActions: {
+    marginTop: 15,
+    display: "flex",
+    gap: 10,
+  },
+
+  wtbWhatsapp: {
+    display: "inline-block",
+    padding: "9px 14px",
+    background: "#16a34a",
+    color: "#fff",
+    borderRadius: 7,
+    textDecoration: "none",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+
   page: {
     padding: 25,
     background: "#f4f6fb",
