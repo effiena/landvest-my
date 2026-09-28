@@ -42,24 +42,6 @@ function money(value: number) {
   })}`;
 }
 
-function calculateLoan(
-  monthlyPayment: number,
-  annualRate: number,
-  years: number
-) {
-  if (monthlyPayment <= 0 || years <= 0) return 0;
-
-  const monthlyRate = annualRate / 100 / 12;
-  const months = years * 12;
-
-  if (monthlyRate === 0) return monthlyPayment * months;
-
-  return (
-    monthlyPayment *
-    ((1 - Math.pow(1 + monthlyRate, -months)) / monthlyRate)
-  );
-}
-
 export default function WantToBuyPage() {
   const [form, setForm] = useState({
     buyerName: "",
@@ -69,11 +51,8 @@ export default function WantToBuyPage() {
     requiredSize: "",
     budget: "",
     netIncome: "",
-    creditCardBalance: "",
     monthlyLoanRepayment: "",
     ctosCcrisStatus: "",
-    loanTenure: "30",
-    interestRate: "4.3",
     additionalRequirements: "",
     selectedAgentId: "",
   });
@@ -90,48 +69,29 @@ export default function WantToBuyPage() {
   }, [form.city]);
 
   const loan = useMemo(() => {
-    const netIncome = Number(form.netIncome) || 0;
-    const creditCardBalance = Number(form.creditCardBalance) || 0;
-    const monthlyLoanRepayment =
+    const basicSalary = Number(form.netIncome) || 0;
+    const bankCommitment =
       Number(form.monthlyLoanRepayment) || 0;
 
-    // Indicative credit-card monthly commitment.
-    // Actual bank treatment may vary.
-    const creditCardCommitment = creditCardBalance * 0.05;
-
-    const totalExistingCommitments =
-      creditCardCommitment + monthlyLoanRepayment;
-
-    // Indicative maximum DSR assumption.
-    const dsr = netIncome * 0.6;
-
-    // Amount potentially available for a new housing instalment.
-    const available = Math.max(
-      0,
-      dsr - totalExistingCommitments
-    );
-
-    const estimatedLoan = calculateLoan(
-      available,
-      Number(form.interestRate) || 4.3,
-      Number(form.loanTenure) || 30
-    );
+    // OD Legacy loan eligibility formula
+    // A = Basic Salary × 60%
+    // B = A − Bank Commitment
+    // C = B × 200
+    // C = Estimated Bank Loan Amount
+    const a = basicSalary * 0.6;
+    const b = Math.max(0, a - bankCommitment);
+    const c = b * 200;
 
     return {
-      dsr,
-      creditCardCommitment,
-      monthlyLoanRepayment,
-      totalExistingCommitments,
-      available,
-      estimatedLoan,
-      propertyPrice: estimatedLoan / 0.9,
+      dsr: a,
+      monthlyLoanRepayment: bankCommitment,
+      available: b,
+      estimatedLoan: c,
+      propertyPrice: c / 0.9,
     };
   }, [
     form.netIncome,
-    form.creditCardBalance,
     form.monthlyLoanRepayment,
-    form.loanTenure,
-    form.interestRate,
   ]);
 
   const update = (name: string, value: string) => {
@@ -249,20 +209,6 @@ export default function WantToBuyPage() {
               min="0"
               value={form.netIncome}
               onChange={(e) => update("netIncome", e.target.value)}
-              placeholder="e.g. 5000"
-              style={styles.input}
-            />
-
-            <label style={styles.label}>
-              Outstanding Credit Card Balance (RM)
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={form.creditCardBalance}
-              onChange={(e) =>
-                update("creditCardBalance", e.target.value)
-              }
               placeholder="e.g. 5000"
               style={styles.input}
             />
@@ -396,68 +342,25 @@ export default function WantToBuyPage() {
               guarantee bank approval.
             </p>
 
-            <div style={styles.row}>
-              <div>
-                <label style={styles.label}>Loan Tenure</label>
-                <select
-                  value={form.loanTenure}
-                  onChange={(e) => update("loanTenure", e.target.value)}
-                  style={styles.input}
-                >
-                  <option value="30">30 years</option>
-                  <option value="35">35 years</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={styles.label}>Interest Rate</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={form.interestRate}
-                  onChange={(e) =>
-                    update("interestRate", e.target.value)
-                  }
-                  style={styles.input}
-                />
-              </div>
-            </div>
-
             <div style={styles.calculator}>
               <div>
-                <span>Indicative maximum DSR (60%)</span>
-                <strong>{money(loan.dsr)}</strong>
+                <span>Basic Salary</span>
+                <strong>{money(Number(form.netIncome) || 0)}</strong>
               </div>
 
               <div>
-                <span>Estimated credit card commitment (5%)</span>
-                <strong>
-                  {money(
-                    (Number(form.creditCardBalance) || 0) * 0.05
-                  )}
-                </strong>
+                <span>Bank Commitment</span>
+                <strong>{money(Number(form.monthlyLoanRepayment) || 0)}</strong>
               </div>
 
               <div>
-                <span>Existing monthly loan repayment</span>
-                <strong>
-                  {money(Number(form.monthlyLoanRepayment) || 0)}
-                </strong>
-              </div>
-
-              <div>
-                <span>Available housing instalment</span>
-                <strong>{money(loan.available)}</strong>
-              </div>
-
-              <div>
-                <span>Estimated loan eligibility</span>
+                <span>Loan Amount</span>
                 <strong>{money(loan.estimatedLoan)}</strong>
               </div>
 
               <div>
-                <span>Indicative property price (90% financing)</span>
-                <strong>{money(loan.propertyPrice)}</strong>
+                <span>Total Loan Financing</span>
+                <strong>{money(loan.estimatedLoan)}</strong>
               </div>
             </div>
           </section>
@@ -469,7 +372,7 @@ export default function WantToBuyPage() {
           </button>
 
           <p style={styles.privacy}>
-            Your net income, credit card balance, loan repayment and CTOS/CCRIS information is private
+            Your net income, loan repayment and CTOS/CCRIS information is private
             and only used by the assigned property consultant for enquiry
             assessment.
           </p>

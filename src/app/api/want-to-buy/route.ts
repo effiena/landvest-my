@@ -62,7 +62,6 @@ export async function POST(req: NextRequest) {
       requiredSize,
       budget,
       netIncome,
-      creditCardBalance,
       monthlyLoanRepayment,
       ctosCcrisStatus,
       loanTenure,
@@ -136,11 +135,11 @@ export async function POST(req: NextRequest) {
             ? Number(netIncome)
             : null,
 
-        // Store total estimated existing monthly commitments.
-        // Credit card commitment is estimated at 5% of outstanding balance.
+        // Store existing monthly loan repayment.
         bankCommitment:
-          (Number(creditCardBalance) || 0) * 0.05 +
-          (Number(monthlyLoanRepayment) || 0),
+          monthlyLoanRepayment !== "" && monthlyLoanRepayment != null
+            ? Number(monthlyLoanRepayment)
+            : null,
         ctosCcrisStatus: ctosCcrisStatus?.trim() || null,
         loanTenure:
           loanTenure !== "" && loanTenure != null

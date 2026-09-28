@@ -410,9 +410,9 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
                 </div>
 
                 <div style={styles.wtbGrid}>
-                  <div>
-                    <strong>📱 WhatsApp</strong>
-                    <p>{buyer.whatsapp}</p>
+                  <div style={styles.wtbGridItem}>
+                    <strong style={styles.wtbLabel}>📱 WhatsApp</strong>
+                    <p style={styles.wtbValue}>{buyer.whatsapp}</p>
                   </div>
 
                   <div>
@@ -497,8 +497,8 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
 
                 {buyer.additionalRequirements && (
                   <div style={styles.wtbRequirements}>
-                    <strong>📝 Additional Requirements</strong>
-                    <p>{buyer.additionalRequirements}</p>
+                    <strong style={styles.wtbLabel}>📝 Additional Requirements</strong>
+                    <p style={styles.wtbValue}>{buyer.additionalRequirements}</p>
                   </div>
                 )}
 
@@ -719,7 +719,7 @@ const styles: any = {
 
   wtbSub: {
     margin: "5px 0 0",
-    color: "#666",
+    color: "#334155",
     fontSize: 14,
   },
 
@@ -736,7 +736,7 @@ const styles: any = {
     padding: 20,
     background: "#f4f6fb",
     borderRadius: 8,
-    color: "#666",
+    color: "#1E293B",
   },
 
   wtbList: {
@@ -745,10 +745,11 @@ const styles: any = {
   },
 
   wtbCard: {
-    border: "1px solid #e5e7eb",
+    border: "1px solid #cbd5e1",
     borderRadius: 10,
     padding: 16,
-    background: "#fafafa",
+    background: "#ffffff",
+    color: "#111827",
   },
 
   wtbCardTop: {
@@ -766,7 +767,7 @@ const styles: any = {
 
   wtbMeta: {
     margin: "5px 0 0",
-    color: "#777",
+    color: "#475569",
     fontSize: 12,
   },
 
@@ -788,16 +789,32 @@ const styles: any = {
   },
 
   wtbGridItem: {
-    background: "#fff",
+    background: "#ffffff",
     padding: 10,
     borderRadius: 7,
+    color: "#111827",
   },
 
   wtbRequirements: {
     marginTop: 15,
     padding: 12,
-    background: "#fff",
+    background: "#ffffff",
     borderRadius: 8,
+    color: "#111827",
+  },
+
+  wtbLabel: {
+    display: "block",
+    color: "#0F172A",
+    fontWeight: 700,
+    fontSize: 14,
+  },
+
+  wtbValue: {
+    margin: "6px 0 0",
+    color: "#1E293B",
+    fontSize: 14,
+    lineHeight: 1.5,
   },
 
   wtbActions: {

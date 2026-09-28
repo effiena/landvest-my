@@ -165,7 +165,7 @@ hero: {
   },
 
   text: {
-    color: "#475569",
+    color: "#1E293B",
     fontSize: 14,
   },
 
@@ -179,7 +179,7 @@ hero: {
   desc: {
     marginTop: 12,
     fontSize: 15,
-    color: "#475569",
+    color: "#1E293B",
     lineHeight: "1.8",
     whiteSpace: "pre-line",
     textAlign: "justify",
@@ -225,6 +225,6 @@ heroSubtitle: {
   marginTop: 10,
   marginBottom: 0,
   fontSize: "clamp(15px, 3vw, 20px)",
-  color: "#666",
+  color: "#334155",
 },
 };
