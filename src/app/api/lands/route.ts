@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     const {
       title,
       location,
+      city,
       state,
       areaValue,
       areaUnit,
@@ -182,6 +183,7 @@ export async function POST(req: NextRequest) {
 
         title: title.trim(),
         location: location.trim(),
+        city: city?.trim() || null,
         state: state.trim(),
 
         acreage: Number(acreage) || 0,

@@ -27,6 +27,7 @@ export default function AdminClient({ lands, agent }: any) {
   const [form, setForm] = useState({
     title: "",
     location: "",
+    city: "",
     state: "",
     areaValue: "",
     areaUnit: "acre",
@@ -158,6 +159,7 @@ export default function AdminClient({ lands, agent }: any) {
     setForm({
       title: land.title,
       location: land.location,
+      city: land.city || "",
       state: land.state,
       areaValue: land.areaValue ?? land.acreage ?? "",
       areaUnit: land.areaUnit ?? "acre",
@@ -343,6 +345,7 @@ export default function AdminClient({ lands, agent }: any) {
           <div className="propvest-admin-form" style={styles.form}>
             <input name="title" placeholder="Title" value={form.title} onChange={handleChange} style={styles.input} />
             <input name="location" placeholder="Location" value={form.location} onChange={handleChange} style={styles.input} />
+            <input name="city" placeholder="City" value={form.city} onChange={handleChange} style={styles.input} />
             <input name="state" placeholder="State" value={form.state} onChange={handleChange} style={styles.input} />
             <div style={styles.areaRow}>
               <input
@@ -450,6 +453,7 @@ export default function AdminClient({ lands, agent }: any) {
                   setForm({
                     title: "",
                     location: "",
+                    city: "",
                     state: "",
                     areaValue: "",
                     areaUnit: "acre",
@@ -484,6 +488,7 @@ export default function AdminClient({ lands, agent }: any) {
               {/* INFO */}
               <h3 style={styles.title}>{land.title}</h3>
               <p style={styles.text}>📍 {land.location}</p>
+              {land.city && <p style={styles.text}>🏙️ {land.city}</p>}
               <p style={styles.text}>🗺 {land.state}</p>
               <p style={styles.price}>💰 RM {String(land.price).replace(/^RM\s*/i, "")}</p>
 
