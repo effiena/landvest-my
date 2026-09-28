@@ -58,6 +58,7 @@ model Land {
   title       String
   location    String
   state       String
+  city        String?
   acreage     Float
   price       String
   description String
