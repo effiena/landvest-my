@@ -83,7 +83,6 @@ model Land {
   title       String
   location    String
   state       String
-  city        String?
   acreage     Float
   price       String
   description String
@@ -91,6 +90,7 @@ model Land {
   createdAt   DateTime    @default(now())
   areaValue   Float?
   areaUnit    String?
+  city        String?
   agent       Agent       @relation(fields: [agentId], references: [id])
   images      LandImage[]
 }

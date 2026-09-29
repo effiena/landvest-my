@@ -151,14 +151,19 @@ export default function WantToBuyPage() {
     return (
       <main style={styles.page}>
         <div style={styles.successCard}>
-          <div style={{ fontSize: 50 }}>✅</div>
-          <h1>Enquiry Submitted</h1>
-          <p>
+          <div style={styles.successIcon}>✅</div>
+
+          <h1 style={styles.successTitle}>
+            Enquiry Submitted
+          </h1>
+
+          <p style={styles.successMessage}>
             Thank you. Our property consultant will contact you through
             WhatsApp regarding your requirements.
           </p>
 
           <button
+            type="button"
             onClick={() => window.location.href = "/"}
             style={styles.primary}
           >
@@ -383,6 +388,38 @@ export default function WantToBuyPage() {
 }
 
 const styles: any = {
+  successCard: {
+    maxWidth: 600,
+    margin: "80px auto",
+    padding: "40px 28px",
+    background: "#ffffff",
+    borderRadius: 16,
+    boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
+    textAlign: "center",
+    color: "#111827",
+  },
+
+  successIcon: {
+    fontSize: 50,
+    lineHeight: 1,
+    marginBottom: 20,
+  },
+
+  successTitle: {
+    margin: "0 0 12px",
+    color: "#111827",
+    fontSize: 30,
+    fontWeight: 800,
+  },
+
+  successMessage: {
+    margin: "0 auto",
+    maxWidth: 500,
+    color: "#374151",
+    fontSize: 16,
+    lineHeight: 1.7,
+  },
+
   page: {
     minHeight: "100vh",
     background: "#f4f6fb",
@@ -504,14 +541,6 @@ const styles: any = {
     background: "#FACC15",
     fontWeight: "bold",
     cursor: "pointer",
-  },
-  successCard: {
-    maxWidth: 600,
-    margin: "80px auto",
-    background: "#fff",
-    padding: 35,
-    borderRadius: 16,
-    textAlign: "center",
   },
   privacy: {
     textAlign: "center",

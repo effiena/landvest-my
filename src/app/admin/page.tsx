@@ -40,6 +40,11 @@ export default async function AdminDashboard() {
         orderBy: { createdAt: "desc" },
       },
       wantToBuy: {
+        where: {
+          status: {
+            not: "closed",
+          },
+        },
         orderBy: { createdAt: "desc" },
       },
     },
