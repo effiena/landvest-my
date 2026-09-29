@@ -174,8 +174,8 @@ export default function WantToBuyPage() {
       <div style={styles.container}>
         <div style={styles.hero}>
           <div style={styles.badge}>PROPVEST MALAYSIA</div>
-          <h1>Want To Buy?</h1>
-          <p>
+          <h1 style={styles.heroTitle}>Want To Buy?</h1>
+          <p style={styles.heroDescription}>
             Tell us what property or land you are looking for and our
             consultant will help match your requirements.
           </p>
@@ -396,7 +396,23 @@ const styles: any = {
   hero: {
     textAlign: "center",
     marginBottom: 25,
+    color: "#111827",
+
   },
+  heroTitle: {
+    color: "#111827",
+    fontSize: 34,
+    fontWeight: 800,
+    margin: "14px 0 8px",
+  },
+
+  heroDescription: {
+    color: "#374151",
+    fontSize: 16,
+    lineHeight: 1.6,
+    margin: 0,
+  },
+
   badge: {
     display: "inline-block",
     background: "#111827",
@@ -412,6 +428,7 @@ const styles: any = {
     borderRadius: 14,
     marginBottom: 18,
     boxShadow: "0 4px 15px rgba(0,0,0,0.05)",
+    color: "#111827",
   },
   label: {
     display: "block",

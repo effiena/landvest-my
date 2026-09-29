@@ -108,3 +108,14 @@ model Admin {
   username String @unique
   password String
 }
+
+model Visitor {
+  id        Int      @id @default(autoincrement())
+  visitorId String
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([createdAt])
+}

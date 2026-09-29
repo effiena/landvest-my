@@ -391,7 +391,16 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
                       👤 {buyer.buyerName}
                     </h3>
                     <p style={styles.wtbMeta}>
-                      📅 {new Date(buyer.createdAt).toLocaleString()}
+                      📅 {new Date(buyer.createdAt).toLocaleString("en-MY", {
+                            timeZone: "Asia/Kuala_Lumpur",
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                            hour12: true,
+                         })}
                     </p>
                   </div>
 
