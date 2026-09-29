@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { cookies, headers } from "next/headers";
+import jwt from "jsonwebtoken";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import LandSearch from "@/components/LandSearch";
@@ -7,6 +9,70 @@ import SellPropertyPopup from "@/components/SellPropertyPopup";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  // Silent homepage visitor tracking
+  try {
+    const headerStore = await headers();
+    const cookieStore = await cookies();
+
+    const visitorId =
+      headerStore.get("x-propvest-visitor-id") ||
+      cookieStore.get("propvest_visitor_id")?.value;
+
+    if (visitorId) {
+      let excluded = false;
+
+      const token = cookieStore.get("token")?.value;
+
+      if (token) {
+        try {
+          const decoded: any = jwt.verify(
+            token,
+            process.env.JWT_SECRET || "dev_secret_key"
+          );
+
+          if (decoded?.id) {
+            const agent = await prisma.agent.findUnique({
+              where: { id: Number(decoded.id) },
+              select: { name: true },
+            });
+
+            const name = (agent?.name || "").trim().toLowerCase();
+
+            if (name === "yoori" || name === "della") {
+              excluded = true;
+            }
+          }
+        } catch {
+          // Invalid token — treat as normal visitor
+        }
+      }
+
+      if (!excluded) {
+        const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+        const existingVisitor = await prisma.visitor.findFirst({
+          where: {
+            visitorId,
+            createdAt: {
+              gte: since,
+            },
+          },
+        });
+
+        if (!existingVisitor) {
+          await prisma.visitor.create({
+            data: {
+              visitorId,
+              userAgent: headerStore.get("user-agent"),
+            },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Homepage visitor tracking error:", error);
+  }
+
   const lands = await prisma.land.findMany({
     include: { images: true },
     orderBy: { createdAt: "desc" },
