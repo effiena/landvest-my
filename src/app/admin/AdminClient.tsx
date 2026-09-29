@@ -11,6 +11,7 @@ import BuyListingCredit from "@/components/BuyListingCredit";
 export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
 
   const router = useRouter();
+  const [visibleWantToBuy, setVisibleWantToBuy] = useState(wantToBuy);
 
   const handleLogout = async () => {
     try {
@@ -47,6 +48,17 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
   const updateWantToBuyStatus = async (id: number, status: string) => {
     setStatusLoading(id);
 
+    const currentBuyer = visibleWantToBuy.find(
+      (item: any) => item.id === id
+    );
+
+    // Remove closed enquiry immediately from the screen
+    if (status === "closed") {
+      setVisibleWantToBuy((current: any[]) =>
+        current.filter((item) => item.id !== id)
+      );
+    }
+
     try {
       const res = await fetch(`/api/want-to-buy/${id}`, {
         method: "PATCH",
@@ -59,12 +71,41 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
       const data = await res.json();
 
       if (!res.ok) {
+        // Restore the enquiry if the database update failed
+        if (status === "closed" && currentBuyer) {
+          setVisibleWantToBuy((current: any[]) => {
+            if (current.some((item) => item.id === id)) {
+              return current;
+            }
+
+            return [...current, currentBuyer];
+          });
+        }
+
         alert(data.error || "Unable to update status.");
         return;
       }
 
-      window.location.reload();
+      // For non-closed status changes, update the card locally
+      if (status !== "closed") {
+        setVisibleWantToBuy((current: any[]) =>
+          current.map((item: any) =>
+            item.id === id ? { ...item, status } : item
+          )
+        );
+      }
     } catch {
+      // Restore the enquiry if the request failed
+      if (status === "closed" && currentBuyer) {
+        setVisibleWantToBuy((current: any[]) => {
+          if (current.some((item) => item.id === id)) {
+            return current;
+          }
+
+          return [...current, currentBuyer];
+        });
+      }
+
       alert("Unable to update enquiry status.");
     } finally {
       setStatusLoading(null);
@@ -373,17 +414,17 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
           </div>
 
           <span style={styles.wtbCount}>
-            {wantToBuy.length} {wantToBuy.length === 1 ? "Enquiry" : "Enquiries"}
+            {visibleWantToBuy.length} {visibleWantToBuy.length === 1 ? "Enquiry" : "Enquiries"}
           </span>
         </div>
 
-        {wantToBuy.length === 0 ? (
+        {visibleWantToBuy.length === 0 ? (
           <div style={styles.wtbEmpty}>
             No Want To Buy enquiries yet.
           </div>
         ) : (
           <div style={styles.wtbList}>
-            {wantToBuy.map((buyer: any) => (
+            {visibleWantToBuy.map((buyer: any) => (
               <div key={buyer.id} style={styles.wtbCard}>
                 <div style={styles.wtbCardTop}>
                   <div>
@@ -404,18 +445,33 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
                     </p>
                   </div>
 
-                  <select
-                    value={buyer.status || "new"}
-                    disabled={statusLoading === buyer.id}
-                    onChange={(e) =>
-                      updateWantToBuyStatus(buyer.id, e.target.value)
-                    }
-                    style={styles.wtbStatusSelect}
-                  >
-                    <option value="new">🆕 New</option>
-                    <option value="contacted">📞 Contacted</option>
-                    <option value="closed">✅ Closed</option>
-                  </select>
+                  <div style={styles.wtbStatusActions}>
+                    <select
+                      value={buyer.status || "new"}
+                      disabled={statusLoading === buyer.id}
+                      onChange={(e) =>
+                        updateWantToBuyStatus(buyer.id, e.target.value)
+                      }
+                      style={styles.wtbStatusSelect}
+                    >
+                      <option value="new">🆕 New</option>
+                      <option value="contacted">📞 Contacted</option>
+                      <option value="closed">✅ Closed</option>
+                    </select>
+
+                    <button
+                      type="button"
+                      title="Close inquiry"
+                      aria-label={`Close inquiry from ${buyer.buyerName}`}
+                      disabled={statusLoading === buyer.id}
+                      onClick={() =>
+                        updateWantToBuyStatus(buyer.id, "closed")
+                      }
+                      style={styles.wtbCloseButton}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
 
                 <div style={styles.wtbGrid}>
@@ -778,6 +834,28 @@ const styles: any = {
     margin: "5px 0 0",
     color: "#475569",
     fontSize: 12,
+  },
+
+  wtbStatusActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  wtbCloseButton: {
+    width: 34,
+    height: 34,
+    border: "1px solid #CBD5E1",
+    borderRadius: 8,
+    background: "#FFFFFF",
+    color: "#DC2626",
+    fontSize: 24,
+    fontWeight: "bold",
+    lineHeight: 1,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   wtbStatusSelect: {
