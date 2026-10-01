@@ -388,6 +388,48 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // =====================================================
+      // INVOICE PAID
+      // =====================================================
+
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+
+        console.log(
+          "Stripe invoice paid:",
+          {
+            invoiceId: invoice.id,
+            customerId:
+              typeof invoice.customer === "string"
+                ? invoice.customer
+                : invoice.customer?.id || null,
+          }
+        );
+
+        break;
+      }
+
+      // =====================================================
+      // INVOICE PAYMENT FAILED
+      // =====================================================
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+
+        console.error(
+          "Stripe invoice payment failed:",
+          {
+            invoiceId: invoice.id,
+            customerId:
+              typeof invoice.customer === "string"
+                ? invoice.customer
+                : invoice.customer?.id || null,
+          }
+        );
+
+        break;
+      }
+
       default:
         console.log(
           "Unhandled Stripe event:",
