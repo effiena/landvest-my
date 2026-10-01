@@ -49,6 +49,10 @@ export default function Navbar() {
           Want To Buy
         </Link>
 
+        <Link href="/membership" style={styles.memberBtn}>
+          ⭐ Be a PropVest Member
+        </Link>
+
         {!isLoggedIn ? (
           <>
             <Link href="/login" style={styles.btn}>
@@ -102,6 +106,15 @@ const styles: any = {
 
   wtbBtn: {
     background: "#1E3A8A",
+    color: "#FFFFFF",
+    padding: "8px 14px",
+    borderRadius: 6,
+    fontWeight: "bold",
+    textDecoration: "none",
+  },
+
+  memberBtn: {
+    background: "#16A34A",
     color: "#FFFFFF",
     padding: "8px 14px",
     borderRadius: 6,

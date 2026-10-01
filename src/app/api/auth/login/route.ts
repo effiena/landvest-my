@@ -65,6 +65,14 @@ export async function POST(req: Request) {
       );
     }
 
+    console.log("[LOGIN] issuing session for:", {
+      id: agent.id,
+      name: agent.name,
+      email: agent.email,
+      role: agent.role,
+      plan: agent.plan,
+    });
+
     const token = jwt.sign(
       {
         id: agent.id,

@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import LandSearch from "@/components/LandSearch";
 import SellPropertyPopup from "@/components/SellPropertyPopup";
+import HomeMembershipCTA from "@/components/HomeMembershipCTA";
 
 export const dynamic = "force-dynamic";
 
@@ -116,6 +117,7 @@ export default async function Home() {
     <LandSearch lands={lands} />
 
     <SellPropertyPopup />
+          <HomeMembershipCTA />
     </main>
   );
 }

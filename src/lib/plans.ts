@@ -1,18 +1,18 @@
 export const PLANS = {
   starter: {
     name: "Starter",
-    listings: 3,
+    listings: 2,
     photos: 3,
     price: 0,
-    extraListingPrice: 2.90,
+    extraListingPrice: 3.70,
   },
 
   professional: {
     name: "Professional",
     listings: 10,
     photos: 20,
-    price: 8.90,
-    extraListingPrice: 1.70,
+    price: 12.90,
+    extraListingPrice: 2.60,
   },
 
   ceo: {

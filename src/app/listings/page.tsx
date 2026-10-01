@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 
+export const dynamic = "force-dynamic";
+
 export default async function ListingsPage() {
   const lands = await prisma.land.findMany({
     orderBy: {

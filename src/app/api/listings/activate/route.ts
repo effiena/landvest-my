@@ -5,7 +5,6 @@ export async function POST(request: Request) {
 
   const { orderId } = await request.json();
 
-  // verify PayPal here
 
   const agentId = 1; // replace with logged in agent
 

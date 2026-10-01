@@ -10,12 +10,13 @@ datasource db {
 model Agent {
   id                    Int                     @id @default(autoincrement())
   name                  String
+  agency                String
   email                 String                  @unique
   password              String
   plan                  String                  @default("starter")
   createdAt             DateTime                @default(now())
   extraListings         Int                     @default(0)
-  listingLimit          Int                     @default(3)
+  listingLimit          Int                     @default(2)
   role                  String                  @default("agent")
   emailVerified         Boolean                 @default(false)
   verifyToken           String?                 @unique
@@ -55,26 +56,28 @@ model WantToBuy {
 }
 
 model Subscription {
-  id        Int       @id @default(autoincrement())
-  agentId   Int       @unique
-  paypalId  String?   @unique
-  status    String    @default("inactive")
-  plan      String    @default("starter")
-  expiresAt DateTime?
-  createdAt DateTime  @default(now())
-  startedAt DateTime?
-  agent     Agent     @relation(fields: [agentId], references: [id])
+  id                   Int       @id @default(autoincrement())
+  agentId              Int       @unique
+  status               String    @default("inactive")
+  plan                 String    @default("starter")
+  expiresAt            DateTime?
+  createdAt            DateTime  @default(now())
+  startedAt            DateTime?
+  stripeSubscriptionId String?   @unique
+  stripeCustomerId     String?   @unique
+  agent                Agent     @relation(fields: [agentId], references: [id])
 }
 
 model ListingCreditPurchase {
-  id            Int      @id @default(autoincrement())
-  agentId       Int
-  credits       Int
-  amount        Float
-  paypalOrderId String?  @unique
-  status        String   @default("pending")
-  createdAt     DateTime @default(now())
-  agent         Agent    @relation(fields: [agentId], references: [id])
+  id              Int      @id @default(autoincrement())
+  agentId         Int
+  credits         Int
+  amount          Float
+  status          String   @default("pending")
+  createdAt       DateTime @default(now())
+  stripeSessionId String?  @unique
+  stripePaymentId String?  @unique
+  agent           Agent    @relation(fields: [agentId], references: [id])
 }
 
 model Land {

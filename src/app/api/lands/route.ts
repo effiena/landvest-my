@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PLANS } from "@/lib/plans";
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
@@ -112,12 +113,10 @@ export async function POST(req: NextRequest) {
 
     const isMasterlister = agent.role === "masterlister";
 
-    const baseListingLimit =
-      agent.plan === "ceo"
-        ? 500
-        : agent.plan === "professional"
-          ? 10
-          : 3;
+    const planConfig =
+      PLANS[agent.plan as keyof typeof PLANS] || PLANS.starter;
+
+    const baseListingLimit = planConfig.listings;
 
     const listingLimit = isMasterlister
       ? Infinity
@@ -125,11 +124,7 @@ export async function POST(req: NextRequest) {
 
     const photoLimit = isMasterlister
       ? Infinity
-      : agent.plan === "ceo"
-        ? 20
-        : agent.plan === "professional"
-          ? 20
-          : 3;
+      : planConfig.photos;
 
     console.log("===== FINAL LIMIT CHECK =====");
     console.log("Agent:", agent.email);

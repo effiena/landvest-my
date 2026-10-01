@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import DeleteButton from "./components/DeleteButton";
-import PayPalUpgrade from "@/components/PayPalUpgrade";
-import BuyListingCredit from "@/components/BuyListingCredit";
+import StripeCheckout from "./StripeCheckout";
+import { PLANS } from "@/lib/plans";
 
 export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
 
@@ -115,12 +115,10 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
   // PLAN LOGIC
 
 
-  const baseLimit =
-    agent?.plan === "ceo"
-      ? 500
-      : agent?.plan === "professional"
-        ? 10
-        : 3;
+  const planConfig =
+    PLANS[agent?.plan as keyof typeof PLANS] || PLANS.starter;
+
+  const baseLimit = planConfig.listings;
 
   const extraListings = agent?.extraListings || 0;
 
@@ -157,22 +155,15 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
 
-    const photoLimit =
-      agent?.plan === "ceo"
-        ? 20
-        : agent?.plan === "professional"
-          ? 20
-          : 3;
+    const photoLimit = planConfig.photos;
 
 
     if (!editingLand && !canCreate) {
 
       const extraPrice =
         agent?.plan === "ceo"
-          ? "N/A"
-          : agent?.plan === "professional"
-            ? "RM1.70"
-            : "RM2.90";
+          ? "Free"
+          : `RM${planConfig.extraListingPrice.toFixed(2)}`;
 
 
       alert(
@@ -292,9 +283,12 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
     {/* TOP BAR */}
     <div style={styles.topBar}>
       <div>
-        <h1 style={styles.h1}>PropVest Agent Dashboard</h1>
+        <h1 style={styles.h1}>
+          Welcome, {agent?.name} 👋
+        </h1>
+
         <p style={styles.sub}>
-          Manage your land listings efficiently
+          PropVest {planConfig.name} Member · Manage your land listings efficiently
         </p>
       </div>
 
@@ -325,6 +319,49 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
     </div>
 
 
+      {/* PLAN SUMMARY */}
+
+      <div
+        style={{
+          background: "#ffffff",
+          borderRadius: 14,
+          padding: 20,
+          marginBottom: 20,
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+          color: "#111827",
+        }}
+      >
+        <h2 style={{ margin: "0 0 10px", color: "#111827" }}>
+          {planConfig.name} Plan
+        </h2>
+
+        <div style={{ display: "grid", gap: 6 }}>
+          <div>
+            📋 Included listings: <strong>{planConfig.listings}</strong>
+          </div>
+
+          <div>
+            📸 Photos per listing: <strong>{planConfig.photos}</strong>
+          </div>
+
+          <div>
+            ➕ Additional listing:{" "}
+            <strong>
+              {agent?.plan === "ceo"
+                ? "Free"
+                : `RM${planConfig.extraListingPrice.toFixed(2)}`}
+            </strong>
+          </div>
+
+          {agent?.plan === "professional" && (
+            <div>
+              💳 Membership: <strong>RM12.90/month</strong>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* PLAN OPTIONS */}
 
       {agent?.plan !== "professional" && agent?.plan !== "ceo" && (
@@ -335,7 +372,7 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
       </h3>
 
       <p>
-        Unlock premium features for only RM8.90/month.
+        Unlock premium features for only RM12.90/month.
       </p>
 
       <ul>
@@ -344,7 +381,10 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
       <li>✅ Better exposure</li>
       </ul>
 
-      <PayPalUpgrade />
+      <StripeCheckout type="subscription" />
+
+      <div style={{ marginTop: "12px" }}>
+      </div>
 
       </div>
       )}
@@ -382,18 +422,19 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
       <ul style={{ color:"#000000" }}>
 
       <li style={{ color:"#000000" }}>
-      {agent?.plan === "professional"
-        ? "Professional: RM1.70 / listing"
-        : "Starter: RM2.90 / listing"}
+        {agent?.plan === "ceo"
+          ? "CEO: Free"
+          : `${planConfig.name}: RM${planConfig.extraListingPrice.toFixed(2)} / listing`}
       </li>
 
       </ul>
 
 
-      {/* Next component */}
-      <BuyListingCredit
-        plan={agent?.plan}
+      <StripeCheckout
+        type="listing"
+        quantity={1}
       />
+
 
 
       </div>
