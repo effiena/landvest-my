@@ -31,6 +31,65 @@ export default function AdminClient({
     }
   };
 
+  const handleContactStatus = async (
+    id: number,
+    status: "read" | "replied" | "closed"
+  ) => {
+    try {
+      const response = await fetch(`/api/contact/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Unable to update message.");
+        return;
+      }
+
+      setVisibleContactMessages((current: any[]) =>
+        current.map((message) =>
+          message.id === id
+            ? { ...message, status }
+            : message
+        )
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Unable to update message.");
+    }
+  };
+
+  const handleDeleteContact = async (id: number) => {
+    if (!window.confirm("Delete this Contact Developer message?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/contact/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || "Unable to delete message.");
+        return;
+      }
+
+      setVisibleContactMessages((current: any[]) =>
+        current.filter((message) => message.id !== id)
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Unable to delete message.");
+    }
+  };
+
 
   const [form, setForm] = useState({
     title: "",
@@ -280,6 +339,26 @@ export default function AdminClient({
         grid-template-columns: 1fr 110px !important;
         gap: 8px !important;
       }
+
+      .propvest-admin-topbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+      }
+
+      .propvest-admin-header-right {
+        justify-content: flex-start !important;
+        width: 100% !important;
+      }
+
+      .propvest-admin-nav-buttons {
+        width: 100% !important;
+      }
+
+      .propvest-admin-nav-buttons a,
+      .propvest-admin-nav-buttons button {
+        flex: 1 !important;
+        text-align: center !important;
+      }
     }
   `;
 
@@ -288,7 +367,7 @@ export default function AdminClient({
     <style>{responsiveStyles}</style>
     <div style={styles.page}>
     {/* TOP BAR */}
-    <div style={styles.topBar}>
+    <div className="propvest-admin-topbar" style={styles.topBar}>
       <div>
         <h1 style={styles.h1}>
           Welcome, {agent?.name} 👋
@@ -299,18 +378,24 @@ export default function AdminClient({
         </p>
       </div>
 
-      <div style={styles.headerRight}>
+      <div className="propvest-admin-header-right" style={styles.headerRight}>
         <div style={styles.badgeBox}>
           <span style={styles.badge}>
             Plan: {agent?.plan}
           </span>
 
           <span style={styles.badgeYellow}>
-            {lands.length} / {totalLimit}
+            Listings: {lands.length} / {baseLimit}
           </span>
+
+          {extraListings > 0 && (
+            <span style={styles.badgeExtra}>
+              Extra Listings: {extraListings}
+            </span>
+          )}
         </div>
 
-        <div style={styles.navButtons}>
+        <div className="propvest-admin-nav-buttons" style={styles.navButtons}>
           <Link href="/" style={styles.homeBtn}>
             🏠 Home
           </Link>
@@ -884,15 +969,74 @@ export default function AdminClient({
 
                       <div
                         style={{
-                          color: "#64748B",
-                          fontSize: 13,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 12,
+                          flexWrap: "wrap",
+                          marginTop: 12,
                         }}
                       >
-                        🕐{" "}
-                        {new Date(contact.createdAt).toLocaleString("en-MY", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        })}
+                        <div
+                          style={{
+                            color: "#64748B",
+                            fontSize: 13,
+                          }}
+                        >
+                          🕐{" "}
+                          {new Date(contact.createdAt).toLocaleString("en-MY", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          {contact.status === "new" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleContactStatus(contact.id, "read")
+                              }
+                              style={{
+                                border: "none",
+                                background: "#2563EB",
+                                color: "#FFFFFF",
+                                padding: "8px 14px",
+                                borderRadius: 8,
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              ✓ Mark as Read
+                            </button>
+                          )}
+
+                          {contact.status !== "new" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteContact(contact.id)
+                              }
+                              style={{
+                                border: "none",
+                                background: "#DC2626",
+                                color: "#FFFFFF",
+                                padding: "8px 14px",
+                                borderRadius: 8,
+                                cursor: "pointer",
+                                fontWeight: 700,
+                              }}
+                            >
+                              🗑️ Delete
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -1291,8 +1435,17 @@ const styles: any = {
     fontWeight: "bold",
   },
 
-  h1: { margin: 0 },
-  sub: { color: "#666" },
+  h1: {
+    margin: 0,
+    color: "#0F172A",
+    fontSize: 28,
+    fontWeight: 800,
+  },
+  sub: {
+    color: "#334155",
+    fontSize: 15,
+    fontWeight: 500,
+  },
 
   badgeBox: { display: "flex", gap: 10 },
 
@@ -1302,6 +1455,15 @@ const styles: any = {
     padding: "6px 12px",
     borderRadius: 20,
     fontSize: 12,
+  },
+
+  badgeExtra: {
+    background: "#0F766E",
+    color: "#fff",
+    padding: "6px 12px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 700,
   },
 
   badgeYellow: {

@@ -67,15 +67,6 @@ export default async function AdminDashboard() {
     agentName === "yoori" || agentName === "della";
 
   let contactMessages: any[] = [];
-
-  if (canViewVisitorStats) {
-    contactMessages = await prisma.contactMessage.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-  }
-
   let visitorStats = null;
 
   if (canViewVisitorStats) {
@@ -90,26 +81,38 @@ export default async function AdminDashboard() {
       1
     );
 
-    const [totalVisitors, todayVisitors, monthVisitors] =
-      await Promise.all([
-        prisma.visitor.count(),
+    const [
+      loadedContactMessages,
+      totalVisitors,
+      todayVisitors,
+      monthVisitors,
+    ] = await Promise.all([
+      prisma.contactMessage.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
 
-        prisma.visitor.count({
-          where: {
-            createdAt: {
-              gte: startOfToday,
-            },
-          },
-        }),
+      prisma.visitor.count(),
 
-        prisma.visitor.count({
-          where: {
-            createdAt: {
-              gte: startOfMonth,
-            },
+      prisma.visitor.count({
+        where: {
+          createdAt: {
+            gte: startOfToday,
           },
-        }),
-      ]);
+        },
+      }),
+
+      prisma.visitor.count({
+        where: {
+          createdAt: {
+            gte: startOfMonth,
+          },
+        },
+      }),
+    ]);
+
+    contactMessages = loadedContactMessages;
 
     visitorStats = {
       total: totalVisitors,
