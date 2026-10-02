@@ -8,10 +8,17 @@ import DeleteButton from "./components/DeleteButton";
 import StripeCheckout from "./StripeCheckout";
 import { PLANS } from "@/lib/plans";
 
-export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
+export default function AdminClient({
+  lands,
+  agent,
+  wantToBuy = [],
+  contactMessages = [],
+}: any) {
 
   const router = useRouter();
   const [visibleWantToBuy, setVisibleWantToBuy] = useState(wantToBuy);
+  const [visibleContactMessages, setVisibleContactMessages] =
+    useState(contactMessages);
 
   const handleLogout = async () => {
     try {
@@ -444,6 +451,9 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
 
 
 
+      {(agent?.name?.trim().toLowerCase() === "yoori" ||
+        agent?.name?.trim().toLowerCase() === "della") && (
+      <>
       {/* WANT TO BUY ENQUIRIES */}
       <div style={styles.wtbSection}>
         <div style={styles.wtbHeader}>
@@ -461,7 +471,7 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
 
         {visibleWantToBuy.length === 0 ? (
           <div style={styles.wtbEmpty}>
-            No Want To Buy enquiries yet.
+            Buyer Inquiries
           </div>
         ) : (
           <div style={styles.wtbList}>
@@ -623,6 +633,278 @@ export default function AdminClient({ lands, agent, wantToBuy = [] }: any) {
           </div>
         )}
       </div>
+
+      {/* CONTACT DEVELOPER MESSAGES */}
+      {(agent?.name?.trim().toLowerCase() === "yoori" ||
+        agent?.name?.trim().toLowerCase() === "della") && (
+        <div
+          style={{
+            marginBottom: 28,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const messageWindow = document.getElementById(
+                "contact-developer-window"
+              );
+
+              if (messageWindow) {
+                messageWindow.style.display = "flex";
+              }
+            }}
+            style={{
+              width: "100%",
+              maxWidth: 650,
+              padding: "18px 24px",
+              borderRadius: 14,
+              border: "1px solid #C7D2FE",
+              background: "#EEF2FF",
+              color: "#0B2A5B",
+              cursor: "pointer",
+              fontSize: 17,
+              fontWeight: 800,
+              boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+            }}
+          >
+            📩 Contact Developer Messages
+            <span
+              style={{
+                marginLeft: 10,
+                background: "#3730A3",
+                color: "#FFFFFF",
+                padding: "4px 10px",
+                borderRadius: 999,
+                fontSize: 13,
+              }}
+            >
+              {visibleContactMessages.length}
+            </span>
+          </button>
+
+          <div
+            id="contact-developer-window"
+            style={{
+              display: "none",
+              position: "fixed",
+              inset: 0,
+              zIndex: 9999,
+              background: "rgba(15, 23, 42, 0.65)",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 20,
+            }}
+          >
+            <div
+              style={{
+                width: "100%",
+                maxWidth: 850,
+                maxHeight: "90vh",
+                overflowY: "auto",
+                background: "#FFFFFF",
+                borderRadius: 18,
+                padding: 28,
+                boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 15,
+                  marginBottom: 22,
+                }}
+              >
+                <div>
+                  <h2
+                    style={{
+                      margin: 0,
+                      color: "#0B2A5B",
+                      fontSize: 23,
+                    }}
+                  >
+                    📩 Contact Developer Messages
+                  </h2>
+                  <p
+                    style={{
+                      margin: "6px 0 0",
+                      color: "#64748B",
+                    }}
+                  >
+                    Questions, feedback, suggestions and problem reports.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const messageWindow = document.getElementById(
+                      "contact-developer-window"
+                    );
+
+                    if (messageWindow) {
+                      messageWindow.style.display = "none";
+                    }
+                  }}
+                  style={{
+                    border: "none",
+                    background: "#F1F5F9",
+                    color: "#334155",
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    fontSize: 20,
+                    fontWeight: 800,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {visibleContactMessages.length === 0 ? (
+                <div
+                  style={{
+                    padding: 30,
+                    textAlign: "center",
+                    background: "#F8FAFC",
+                    borderRadius: 12,
+                    color: "#64748B",
+                  }}
+                >
+                  No Contact Developer messages yet.
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 16,
+                  }}
+                >
+                  {visibleContactMessages.map((contact: any) => (
+                    <div
+                      key={contact.id}
+                      style={{
+                        border: "1px solid #E2E8F0",
+                        borderRadius: 14,
+                        padding: 20,
+                        background: "#FFFFFF",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: 15,
+                          flexWrap: "wrap",
+                          marginBottom: 14,
+                        }}
+                      >
+                        <div>
+                          <div
+                            style={{
+                              color: "#0B2A5B",
+                              fontWeight: 800,
+                              fontSize: 17,
+                            }}
+                          >
+                            {contact.name}
+                          </div>
+
+                          <div
+                            style={{
+                              color: "#475569",
+                              marginTop: 4,
+                            }}
+                          >
+                            📧 {contact.email}
+                          </div>
+                        </div>
+
+                        <span
+                          style={{
+                            background:
+                              contact.status === "new"
+                                ? "#FEF3C7"
+                                : contact.status === "replied"
+                                  ? "#DCFCE7"
+                                  : contact.status === "closed"
+                                    ? "#E2E8F0"
+                                    : "#DBEAFE",
+                            color:
+                              contact.status === "new"
+                                ? "#92400E"
+                                : contact.status === "replied"
+                                  ? "#166534"
+                                  : contact.status === "closed"
+                                    ? "#475569"
+                                    : "#1E40AF",
+                            padding: "6px 12px",
+                            borderRadius: 999,
+                            fontWeight: 700,
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {contact.status}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "inline-block",
+                          background: "#F1F5F9",
+                          color: "#334155",
+                          padding: "5px 10px",
+                          borderRadius: 8,
+                          fontWeight: 700,
+                          fontSize: 13,
+                          marginBottom: 12,
+                        }}
+                      >
+                        🏷️ {contact.subject}
+                      </div>
+
+                      <div
+                        style={{
+                          background: "#F8FAFC",
+                          borderRadius: 10,
+                          padding: 15,
+                          color: "#1E293B",
+                          lineHeight: 1.7,
+                          whiteSpace: "pre-wrap",
+                          marginBottom: 12,
+                        }}
+                      >
+                        {contact.message}
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#64748B",
+                          fontSize: 13,
+                        }}
+                      >
+                        🕐{" "}
+                        {new Date(contact.createdAt).toLocaleString("en-MY", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      </>
+      )}
 
       {/* CONTENT GRID */}
       <div className="propvest-admin-grid" style={styles.grid}>

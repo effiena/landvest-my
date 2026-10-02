@@ -66,6 +66,16 @@ export default async function AdminDashboard() {
   const canViewVisitorStats =
     agentName === "yoori" || agentName === "della";
 
+  let contactMessages: any[] = [];
+
+  if (canViewVisitorStats) {
+    contactMessages = await prisma.contactMessage.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
   let visitorStats = null;
 
   if (canViewVisitorStats) {
@@ -218,6 +228,7 @@ export default async function AdminDashboard() {
         agent={agent}
         lands={agent.listings}
         wantToBuy={agent.wantToBuy}
+        contactMessages={contactMessages}
       />
     </div>
   );
