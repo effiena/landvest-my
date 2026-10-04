@@ -604,11 +604,17 @@ export default function AdminClient({
           <div
             style={{
               marginBottom: 14,
-              display: "flex",
-              justifyContent: "center",
+              width: "100%",
             }}
           >
-            <button
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                width: "100%",
+              }}
+            >
+              <button
               type="button"
               onClick={() => {
                 const buyerWindow = document.getElementById(
@@ -893,11 +899,17 @@ export default function AdminClient({
           <div
             style={{
               marginBottom: 28,
-              display: "flex",
-              justifyContent: "center",
+              width: "100%",
             }}
           >
-            <button
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                width: "100%",
+              }}
+            >
+              <button
               type="button"
               onClick={() => {
                 const ownerWindow = document.getElementById(
@@ -936,6 +948,7 @@ export default function AdminClient({
                 {visibleWantToSell.length}
               </span>
             </button>
+            </div>
 
             <div
               id="owner-inquiries-window"
@@ -1312,6 +1325,7 @@ export default function AdminClient({
                 )}
               </div>
             </div>
+          </div>
           </div>
         </>
       )}
