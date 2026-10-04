@@ -339,37 +339,6 @@ export default function WantToBuyPage() {
             />
           </section>
 
-          <section style={styles.card}>
-            <h2>🏦 Indicative Loan Eligibility</h2>
-
-            <p style={styles.note}>
-              Estimate only. This uses a 60% DSR assumption and does not
-              guarantee bank approval.
-            </p>
-
-            <div style={styles.calculator}>
-              <div>
-                <span>Basic Salary</span>
-                <strong>{money(Number(form.netIncome) || 0)}</strong>
-              </div>
-
-              <div>
-                <span>Bank Commitment</span>
-                <strong>{money(Number(form.monthlyLoanRepayment) || 0)}</strong>
-              </div>
-
-              <div>
-                <span>Loan Amount</span>
-                <strong>{money(loan.estimatedLoan)}</strong>
-              </div>
-
-              <div>
-                <span>Total Loan Financing</span>
-                <strong>{money(loan.estimatedLoan)}</strong>
-              </div>
-            </div>
-          </section>
-
           {error && <div style={styles.error}>{error}</div>}
 
           <button disabled={loading} type="submit" style={styles.submit}>

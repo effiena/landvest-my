@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import Navbar from "@/components/Navbar";
 import Link from "next/link";
 import LandSearch from "@/components/LandSearch";
-import SellPropertyPopup from "@/components/SellPropertyPopup";
+import SellPropertyButton from "@/components/SellPropertyButton";
 import HomeMembershipCTA from "@/components/HomeMembershipCTA";
 
 export const dynamic = "force-dynamic";
@@ -100,9 +100,13 @@ export default async function Home() {
         </div>
 
         <div style={styles.actions}>
-          <Link href="/want-to-buy" style={styles.btnWantToBuy}>
-            I Want To Buy
-          </Link>
+          <div style={styles.buySellActions}>
+            <Link href="/want-to-buy" style={styles.btnWantToBuy}>
+              I Want To Buy
+            </Link>
+
+            <SellPropertyButton />
+          </div>
 
           <Link href="/login" style={styles.btnDark}>
             Login
@@ -116,7 +120,6 @@ export default async function Home() {
 
     <LandSearch lands={lands} />
 
-    <SellPropertyPopup />
           <HomeMembershipCTA />
     </main>
   );
@@ -154,7 +157,16 @@ hero: {
     marginTop: 20,
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     gap: 12,
+    flexWrap: "wrap",
+  },
+
+  buySellActions: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
     flexWrap: "wrap",
   },
 

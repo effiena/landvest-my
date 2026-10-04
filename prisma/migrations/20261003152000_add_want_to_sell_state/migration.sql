@@ -1,0 +1,2 @@
+ALTER TABLE "WantToSell"
+ADD COLUMN "state" TEXT NOT NULL DEFAULT '';

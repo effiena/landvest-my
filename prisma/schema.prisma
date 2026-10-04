@@ -39,6 +39,7 @@ model Agent {
   purchases             ListingCreditPurchase[]
   subscription          Subscription?
   wantToBuy             WantToBuy[]             @relation("AssignedWantToBuy")
+  wantToSell            WantToSell[]            @relation("AssignedWantToSell")
 }
 
 model WantToBuy {
@@ -63,6 +64,27 @@ model WantToBuy {
   status                 String   @default("new")
   createdAt              DateTime @default(now())
   assignedAgent          Agent?   @relation("AssignedWantToBuy", fields: [assignedAgentId], references: [id])
+}
+
+
+model WantToSell {
+  id                  Int      @id @default(autoincrement())
+  ownerName           String
+  whatsapp            String
+  email               String?
+  state               String
+  city                String
+  propertyAddress     String
+  propertyType        String?
+  propertySize        String?
+  expectedPrice       String?
+  tenure              String?
+  bumiStatus          String?
+  additionalDetails   String?
+  assignedAgentId     Int?
+  status              String   @default("new")
+  createdAt           DateTime @default(now())
+  assignedAgent       Agent?   @relation("AssignedWantToSell", fields: [assignedAgentId], references: [id])
 }
 
 model Subscription {

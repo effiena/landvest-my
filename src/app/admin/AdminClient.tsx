@@ -12,11 +12,13 @@ export default function AdminClient({
   lands,
   agent,
   wantToBuy = [],
+  wantToSell = [],
   contactMessages = [],
 }: any) {
 
   const router = useRouter();
   const [visibleWantToBuy, setVisibleWantToBuy] = useState(wantToBuy);
+  const [visibleWantToSell, setVisibleWantToSell] = useState(wantToSell);
   const [visibleContactMessages, setVisibleContactMessages] =
     useState(contactMessages);
 
@@ -175,6 +177,65 @@ export default function AdminClient({
       alert("Unable to update enquiry status.");
     } finally {
       setStatusLoading(null);
+    }
+  };
+
+  const updateWantToSellStatus = async (id: number, status: string) => {
+    const currentOwner = visibleWantToSell.find(
+      (item: any) => item.id === id
+    );
+
+    if (status === "closed") {
+      setVisibleWantToSell((current: any[]) =>
+        current.filter((item) => item.id !== id)
+      );
+    }
+
+    try {
+      const res = await fetch(`/api/want-to-sell/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (status === "closed" && currentOwner) {
+          setVisibleWantToSell((current: any[]) => {
+            if (current.some((item) => item.id === id)) {
+              return current;
+            }
+
+            return [...current, currentOwner];
+          });
+        }
+
+        alert(data.error || "Unable to update owner enquiry.");
+        return;
+      }
+
+      if (status !== "closed") {
+        setVisibleWantToSell((current: any[]) =>
+          current.map((item: any) =>
+            item.id === id ? { ...item, status } : item
+          )
+        );
+      }
+    } catch {
+      if (status === "closed" && currentOwner) {
+        setVisibleWantToSell((current: any[]) => {
+          if (current.some((item: any) => item.id === id)) {
+            return current;
+          }
+
+          return [...current, currentOwner];
+        });
+      }
+
+      alert("Unable to update owner enquiry.");
     }
   };
 
@@ -385,7 +446,7 @@ export default function AdminClient({
           </span>
 
           <span style={styles.badgeYellow}>
-            Listings: {lands.length} / {baseLimit}
+            Listings: {lands.length} / {totalLimit}
           </span>
 
           {extraListings > 0 && (
@@ -538,186 +599,722 @@ export default function AdminClient({
 
       {(agent?.name?.trim().toLowerCase() === "yoori" ||
         agent?.name?.trim().toLowerCase() === "della") && (
-      <>
-      {/* WANT TO BUY ENQUIRIES */}
-      <div style={styles.wtbSection}>
-        <div style={styles.wtbHeader}>
-          <div>
-            <h2 style={styles.wtbTitle}>🛒 Want To Buy Enquiries</h2>
-            <p style={styles.wtbSub}>
-              Buyer enquiries assigned to {agent?.name}
-            </p>
-          </div>
+        <>
+          {/* BUYER INQUIRIES BUTTON + POPUP */}
+          <div
+            style={{
+              marginBottom: 14,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                const buyerWindow = document.getElementById(
+                  "buyer-inquiries-window"
+                );
 
-          <span style={styles.wtbCount}>
-            {visibleWantToBuy.length} {visibleWantToBuy.length === 1 ? "Enquiry" : "Enquiries"}
-          </span>
-        </div>
+                if (buyerWindow) {
+                  buyerWindow.style.display = "flex";
+                }
+              }}
+              style={{
+                width: "100%",
+                maxWidth: 650,
+                padding: "18px 24px",
+                borderRadius: 14,
+                border: "1px solid #BFDBFE",
+                background: "#EFF6FF",
+                color: "#1E3A8A",
+                cursor: "pointer",
+                fontSize: 17,
+                fontWeight: 800,
+                boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+              }}
+            >
+              🛒 Buyer Inquiries
+              <span
+                style={{
+                  marginLeft: 10,
+                  background: "#2563EB",
+                  color: "#FFFFFF",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  fontSize: 13,
+                }}
+              >
+                {visibleWantToBuy.length}
+              </span>
+            </button>
 
-        {visibleWantToBuy.length === 0 ? (
-          <div style={styles.wtbEmpty}>
-            Buyer Inquiries
-          </div>
-        ) : (
-          <div style={styles.wtbList}>
-            {visibleWantToBuy.map((buyer: any) => (
-              <div key={buyer.id} style={styles.wtbCard}>
-                <div style={styles.wtbCardTop}>
+            <div
+              id="buyer-inquiries-window"
+              style={{
+                display: "none",
+                position: "fixed",
+                inset: 0,
+                zIndex: 9999,
+                background: "rgba(15, 23, 42, 0.65)",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 20,
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 850,
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  background: "#FFFFFF",
+                  borderRadius: 18,
+                  padding: 28,
+                  boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 15,
+                    marginBottom: 22,
+                  }}
+                >
                   <div>
-                    <h3 style={styles.wtbBuyer}>
-                      👤 {buyer.buyerName}
-                    </h3>
-                    <p style={styles.wtbMeta}>
-                      📅 {new Date(buyer.createdAt).toLocaleString("en-MY", {
-                            timeZone: "Asia/Kuala_Lumpur",
-                            day: "2-digit",
-                            month: "2-digit",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                            second: "2-digit",
-                            hour12: true,
-                         })}
+                    <h2
+                      style={{
+                        margin: 0,
+                        color: "#1E3A8A",
+                        fontSize: 23,
+                      }}
+                    >
+                      🛒 Buyer Inquiries
+                    </h2>
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        color: "#64748B",
+                      }}
+                    >
+                      Buyer enquiries assigned to {agent?.name}.
                     </p>
                   </div>
 
-                  <div style={styles.wtbStatusActions}>
-                    <select
-                      value={buyer.status || "new"}
-                      disabled={statusLoading === buyer.id}
-                      onChange={(e) =>
-                        updateWantToBuyStatus(buyer.id, e.target.value)
-                      }
-                      style={styles.wtbStatusSelect}
-                    >
-                      <option value="new">🆕 New</option>
-                      <option value="contacted">📞 Contacted</option>
-                      <option value="closed">✅ Closed</option>
-                    </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const buyerWindow = document.getElementById(
+                        "buyer-inquiries-window"
+                      );
 
-                    <button
-                      type="button"
-                      title="Close inquiry"
-                      aria-label={`Close inquiry from ${buyer.buyerName}`}
-                      disabled={statusLoading === buyer.id}
-                      onClick={() =>
-                        updateWantToBuyStatus(buyer.id, "closed")
+                      if (buyerWindow) {
+                        buyerWindow.style.display = "none";
                       }
-                      style={styles.wtbCloseButton}
-                    >
-                      ×
-                    </button>
-                  </div>
+                    }}
+                    style={{
+                      border: "none",
+                      background: "#F1F5F9",
+                      color: "#334155",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      fontSize: 20,
+                      fontWeight: 800,
+                    }}
+                  >
+                    ×
+                  </button>
                 </div>
 
-                <div style={styles.wtbGrid}>
-                  <div style={styles.wtbGridItem}>
-                    <strong style={styles.wtbLabel}>📱 WhatsApp</strong>
-                    <p style={styles.wtbValue}>{buyer.whatsapp}</p>
+                {visibleWantToBuy.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 30,
+                      textAlign: "center",
+                      background: "#F8FAFC",
+                      borderRadius: 12,
+                      color: "#64748B",
+                    }}
+                  >
+                    No Buyer Inquiries yet.
                   </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 16,
+                    }}
+                  >
+                    {visibleWantToBuy.map((buyer: any) => (
+                      <div
+                        key={buyer.id}
+                        style={styles.wtbCard}
+                      >
+                        <div style={styles.wtbCardTop}>
+                          <div>
+                            <h3 style={styles.wtbBuyer}>
+                              👤 {buyer.buyerName}
+                            </h3>
 
-                  <div>
-                    <strong>📍 Preferred Area</strong>
-                    <p>{buyer.city}</p>
-                  </div>
+                            <p style={styles.wtbMeta}>
+                              📅{" "}
+                              {new Date(buyer.createdAt).toLocaleString(
+                                "en-MY",
+                                {
+                                  timeZone: "Asia/Kuala_Lumpur",
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  second: "2-digit",
+                                  hour12: true,
+                                }
+                              )}
+                            </p>
+                          </div>
 
-                  <div>
-                    <strong>🏠 Property / Land Type</strong>
-                    <p>{buyer.propertyType || "Not specified"}</p>
-                  </div>
+                          <div style={styles.wtbStatusActions}>
+                            <select
+                              value={buyer.status || "new"}
+                              disabled={statusLoading === buyer.id}
+                              onChange={(e) =>
+                                updateWantToBuyStatus(
+                                  buyer.id,
+                                  e.target.value
+                                )
+                              }
+                              style={styles.wtbStatusSelect}
+                            >
+                              <option value="new">🆕 New</option>
+                              <option value="contacted">
+                                📞 Contacted
+                              </option>
+                              <option value="closed">✅ Closed</option>
+                            </select>
 
-                  <div>
-                    <strong>📐 Required Size</strong>
-                    <p>{buyer.requiredSize || "Not specified"}</p>
-                  </div>
+                            <button
+                              type="button"
+                              title="Close inquiry"
+                              aria-label={`Close inquiry from ${buyer.buyerName}`}
+                              disabled={statusLoading === buyer.id}
+                              onClick={() =>
+                                updateWantToBuyStatus(
+                                  buyer.id,
+                                  "closed"
+                                )
+                              }
+                              style={styles.wtbCloseButton}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
 
-                  <div>
-                    <strong>💰 Budget</strong>
-                    <p>{buyer.budget || "Not specified"}</p>
-                  </div>
+                        <div style={styles.wtbGrid}>
+                          <div style={styles.wtbGridItem}>
+                            <strong style={styles.wtbLabel}>
+                              📱 WhatsApp
+                            </strong>
+                            <p style={styles.wtbValue}>
+                              {buyer.whatsapp}
+                            </p>
+                          </div>
 
-                  <div>
-                    <strong>💵 Basic Salary</strong>
-                    <p>
-                      {buyer.basicSalary != null
-                        ? `RM ${Number(buyer.basicSalary).toLocaleString()} / month`
-                        : "Not provided"}
-                    </p>
-                  </div>
+                          <div>
+                            <strong>📍 Preferred Area</strong>
+                            <p>{buyer.city}</p>
+                          </div>
 
-                  <div>
-                    <strong>🏦 Bank Commitment</strong>
-                    <p>
-                      {buyer.bankCommitment != null
-                        ? `RM ${Number(buyer.bankCommitment).toLocaleString()} / month`
-                        : "Not provided"}
-                    </p>
-                  </div>
+                          <div>
+                            <strong>🏠 Property / Land Type</strong>
+                            <p>
+                              {buyer.propertyType || "Not specified"}
+                            </p>
+                          </div>
 
-                  <div>
-                    <strong>📊 CTOS / CCRIS</strong>
-                    <p>{buyer.ctosCcrisStatus || "Not provided"}</p>
-                  </div>
+                          <div>
+                            <strong>📐 Required Size</strong>
+                            <p>
+                              {buyer.requiredSize || "Not specified"}
+                            </p>
+                          </div>
 
-                  <div>
-                    <strong>🧮 Estimated Loan</strong>
-                    <p>
-                      {buyer.estimatedLoan != null
-                        ? `RM ${Number(buyer.estimatedLoan).toLocaleString()}`
-                        : "Not calculated"}
-                    </p>
-                  </div>
+                          <div>
+                            <strong>💰 Budget</strong>
+                            <p>{buyer.budget || "Not specified"}</p>
+                          </div>
 
-                  <div>
-                    <strong>🏡 Estimated Property Price</strong>
-                    <p>
-                      {buyer.estimatedPropertyPrice != null
-                        ? `RM ${Number(buyer.estimatedPropertyPrice).toLocaleString()}`
-                        : "Not calculated"}
-                    </p>
-                  </div>
+                          <div>
+                            <strong>📊 CTOS / CCRIS</strong>
+                            <p>
+                              {buyer.ctosCcrisStatus ||
+                                "Not provided"}
+                            </p>
+                          </div>
 
-                  <div>
-                    <strong>📈 Available Monthly</strong>
-                    <p>
-                      {buyer.availableMonthly != null
-                        ? `RM ${Number(buyer.availableMonthly).toLocaleString()}`
-                        : "Not calculated"}
-                    </p>
-                  </div>
+                        </div>
 
-                  <div>
-                    <strong>📊 Max DSR</strong>
-                    <p>
-                      {buyer.maxDsr != null
-                        ? `${Number(buyer.maxDsr).toLocaleString()}%`
-                        : "Not specified"}
-                    </p>
-                  </div>
-                </div>
+                        {buyer.additionalRequirements && (
+                          <div style={styles.wtbRequirements}>
+                            <strong style={styles.wtbLabel}>
+                              📝 Additional Requirements
+                            </strong>
+                            <p style={styles.wtbValue}>
+                              {buyer.additionalRequirements}
+                            </p>
+                          </div>
+                        )}
 
-                {buyer.additionalRequirements && (
-                  <div style={styles.wtbRequirements}>
-                    <strong style={styles.wtbLabel}>📝 Additional Requirements</strong>
-                    <p style={styles.wtbValue}>{buyer.additionalRequirements}</p>
+                        <div style={styles.wtbActions}>
+                          <a
+                            href={`https://wa.me/${String(
+                              buyer.whatsapp
+                            ).replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={styles.wtbWhatsapp}
+                          >
+                            💬 Contact Buyer
+                          </a>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
-
-                <div style={styles.wtbActions}>
-                  <a
-                    href={`https://wa.me/${String(buyer.whatsapp).replace(/[^0-9]/g, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={styles.wtbWhatsapp}
-                  >
-                    💬 Contact Buyer
-                  </a>
-                </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
-      </div>
+
+          {/* OWNER INQUIRIES BUTTON + POPUP */}
+          <div
+            style={{
+              marginBottom: 28,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                const ownerWindow = document.getElementById(
+                  "owner-inquiries-window"
+                );
+
+                if (ownerWindow) {
+                  ownerWindow.style.display = "flex";
+                }
+              }}
+              style={{
+                width: "100%",
+                maxWidth: 650,
+                padding: "18px 24px",
+                borderRadius: 14,
+                border: "1px solid #BBF7D0",
+                background: "#F0FDF4",
+                color: "#166534",
+                cursor: "pointer",
+                fontSize: 17,
+                fontWeight: 800,
+                boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+              }}
+            >
+              🏡 Owner Inquiries
+              <span
+                style={{
+                  marginLeft: 10,
+                  background: "#16A34A",
+                  color: "#FFFFFF",
+                  padding: "4px 10px",
+                  borderRadius: 999,
+                  fontSize: 13,
+                }}
+              >
+                {visibleWantToSell.length}
+              </span>
+            </button>
+
+            <div
+              id="owner-inquiries-window"
+              style={{
+                display: "none",
+                position: "fixed",
+                inset: 0,
+                zIndex: 9999,
+                background: "rgba(15, 23, 42, 0.65)",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 20,
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: 850,
+                  maxHeight: "90vh",
+                  overflowY: "auto",
+                  background: "#FFFFFF",
+                  borderRadius: 18,
+                  padding: 28,
+                  boxShadow: "0 25px 60px rgba(0,0,0,0.25)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 15,
+                    marginBottom: 22,
+                  }}
+                >
+                  <div>
+                    <h2
+                      style={{
+                        margin: 0,
+                        color: "#166534",
+                        fontSize: 23,
+                      }}
+                    >
+                      🏡 Owner Inquiries
+                    </h2>
+                    <p
+                      style={{
+                        margin: "6px 0 0",
+                        color: "#64748B",
+                      }}
+                    >
+                      Property owners who want to sell.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ownerWindow = document.getElementById(
+                        "owner-inquiries-window"
+                      );
+
+                      if (ownerWindow) {
+                        ownerWindow.style.display = "none";
+                      }
+                    }}
+                    style={{
+                      border: "none",
+                      background: "#F1F5F9",
+                      color: "#334155",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      cursor: "pointer",
+                      fontSize: 20,
+                      fontWeight: 800,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {visibleWantToSell.length === 0 ? (
+                  <div
+                    style={{
+                      padding: 30,
+                      textAlign: "center",
+                      background: "#F8FAFC",
+                      borderRadius: 12,
+                      color: "#64748B",
+                    }}
+                  >
+                    No Owner Inquiries yet.
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "grid",
+                      gap: 16,
+                    }}
+                  >
+                    {visibleWantToSell.map((owner: any) => (
+                      <div
+                        key={owner.id}
+                        style={{
+                          border: "1px solid #E2E8F0",
+                          borderRadius: 14,
+                          padding: 20,
+                          background: "#FFFFFF",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            gap: 15,
+                            flexWrap: "wrap",
+                            marginBottom: 16,
+                          }}
+                        >
+                          <div>
+                            <h3
+                              style={{
+                                margin: 0,
+                                color: "#166534",
+                                fontSize: 18,
+                              }}
+                            >
+                              👤 {owner.ownerName}
+                            </h3>
+
+                            <p
+                              style={{
+                                margin: "6px 0 0",
+                                color: "#64748B",
+                                fontSize: 13,
+                              }}
+                            >
+                              📅{" "}
+                              {new Date(
+                                owner.createdAt
+                              ).toLocaleString("en-MY", {
+                                timeZone: "Asia/Kuala_Lumpur",
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                              })}
+                            </p>
+                          </div>
+
+                          <select
+                            value={owner.status || "new"}
+                            onChange={(e) =>
+                              updateWantToSellStatus(
+                                owner.id,
+                                e.target.value
+                              )
+                            }
+                            style={{
+                              padding: "8px 10px",
+                              borderRadius: 8,
+                              border: "1px solid #CBD5E1",
+                              background: "#FFFFFF",
+                              color: "#334155",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            <option value="new">🆕 New</option>
+                            <option value="contacted">
+                              📞 Contacted
+                            </option>
+                            <option value="closed">✅ Closed</option>
+                          </select>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fit, minmax(220px, 1fr))",
+                            gap: 12,
+                          }}
+                        >
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>📱 WhatsApp</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.whatsapp || "Not provided"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>🗺️ State</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.state || "Not provided"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>📍 City / Area</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.city || "Not provided"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                              gridColumn: "1 / -1",
+                            }}
+                          >
+                            <strong>🏠 Full Property Address</strong>
+                            <p
+                              style={{
+                                margin: "5px 0 0",
+                                whiteSpace: "pre-wrap",
+                              }}
+                            >
+                              {owner.propertyAddress ||
+                                "Not provided"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>🏡 Property Type</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.propertyType ||
+                                "Not specified"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>📐 Property Size</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.propertySize ||
+                                "Not specified"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>💰 Expected Price</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.expectedPrice ||
+                                "Not specified"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>📜 Tenure</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.tenure || "Not specified"}
+                            </p>
+                          </div>
+
+                          <div
+                            style={{
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>🌱 Bumi Status</strong>
+                            <p style={{ margin: "5px 0 0" }}>
+                              {owner.bumiStatus ||
+                                "Not specified"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {owner.additionalDetails && (
+                          <div
+                            style={{
+                              marginTop: 12,
+                              padding: 14,
+                              background: "#F8FAFC",
+                              borderRadius: 10,
+                            }}
+                          >
+                            <strong>📝 Additional Details</strong>
+                            <p
+                              style={{
+                                margin: "5px 0 0",
+                                whiteSpace: "pre-wrap",
+                                lineHeight: 1.6,
+                              }}
+                            >
+                              {owner.additionalDetails}
+                            </p>
+                          </div>
+                        )}
+
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 10,
+                            flexWrap: "wrap",
+                            marginTop: 16,
+                          }}
+                        >
+                          <a
+                            href={`https://wa.me/${String(
+                              owner.whatsapp
+                            ).replace(/[^0-9]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "10px 16px",
+                              borderRadius: 9,
+                              background: "#16A34A",
+                              color: "#FFFFFF",
+                              textDecoration: "none",
+                              fontWeight: 800,
+                            }}
+                          >
+                            💬 Contact Owner
+                          </a>
+
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* CONTACT DEVELOPER MESSAGES */}
       {(agent?.name?.trim().toLowerCase() === "yoori" ||
@@ -1045,9 +1642,6 @@ export default function AdminClient({
             </div>
           </div>
         </div>
-      )}
-
-      </>
       )}
 
       {/* CONTENT GRID */}

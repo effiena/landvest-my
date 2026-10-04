@@ -67,6 +67,7 @@ export default async function AdminDashboard() {
     agentName === "yoori" || agentName === "della";
 
   let contactMessages: any[] = [];
+  let wantToSell: any[] = [];
   let visitorStats = null;
 
   if (canViewVisitorStats) {
@@ -83,11 +84,31 @@ export default async function AdminDashboard() {
 
     const [
       loadedContactMessages,
+      loadedWantToSell,
       totalVisitors,
       todayVisitors,
       monthVisitors,
     ] = await Promise.all([
       prisma.contactMessage.findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+
+      prisma.wantToSell.findMany({
+        where: {
+          status: {
+            not: "closed",
+          },
+          OR: [
+            {
+              assignedAgentId: agent.id,
+            },
+            {
+              assignedAgentId: null,
+            },
+          ],
+        },
         orderBy: {
           createdAt: "desc",
         },
@@ -113,6 +134,7 @@ export default async function AdminDashboard() {
     ]);
 
     contactMessages = loadedContactMessages;
+    wantToSell = loadedWantToSell;
 
     visitorStats = {
       total: totalVisitors,
@@ -231,6 +253,7 @@ export default async function AdminDashboard() {
         agent={agent}
         lands={agent.listings}
         wantToBuy={agent.wantToBuy}
+        wantToSell={wantToSell}
         contactMessages={contactMessages}
       />
     </div>
