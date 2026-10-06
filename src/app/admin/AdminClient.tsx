@@ -8,6 +8,27 @@ import DeleteButton from "./components/DeleteButton";
 import StripeCheckout from "./StripeCheckout";
 import { PLANS } from "@/lib/plans";
 
+function formatPropertyPrice(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return "Not specified";
+  }
+
+  const cleaned = String(value)
+    .replace(/^RM\s*/i, "")
+    .replace(/,/g, "")
+    .trim();
+
+  const number = Number(cleaned);
+
+  if (!Number.isFinite(number)) {
+    return String(value);
+  }
+
+  return `RM ${number.toLocaleString("en-MY", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
 export default function AdminClient({
   lands,
   agent,
@@ -1234,8 +1255,7 @@ export default function AdminClient({
                           >
                             <strong>💰 Expected Price</strong>
                             <p style={{ margin: "5px 0 0" }}>
-                              {owner.expectedPrice ||
-                                "Not specified"}
+                              {formatPropertyPrice(owner.expectedPrice)}
                             </p>
                           </div>
 
@@ -1814,7 +1834,7 @@ export default function AdminClient({
               <p style={styles.text}>📍 {land.location}</p>
               {land.city && <p style={styles.text}>🏙️ {land.city}</p>}
               <p style={styles.text}>🗺 {land.state}</p>
-              <p style={styles.price}>💰 RM {String(land.price).replace(/^RM\s*/i, "")}</p>
+              <p style={styles.price}>💰 {formatPropertyPrice(land.price)}</p>
 
               {/* ACTIONS */}
               <div style={styles.actions}>

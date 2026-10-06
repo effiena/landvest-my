@@ -3,6 +3,27 @@ import { getWhatsAppLink } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
+function formatPropertyPrice(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return "Not specified";
+  }
+
+  const cleaned = String(value)
+    .replace(/^RM\s*/i, "")
+    .replace(/,/g, "")
+    .trim();
+
+  const number = Number(cleaned);
+
+  if (!Number.isFinite(number)) {
+    return String(value);
+  }
+
+  return `RM ${number.toLocaleString("en-MY", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
 export default async function ListingsPage() {
   const lands = await prisma.land.findMany({
     orderBy: {
@@ -27,7 +48,7 @@ export default async function ListingsPage() {
             <h2>{land.title}</h2>
             <p>{land.location} • {land.state}</p>
             <p>Acreage: {land.acreage}</p>
-            <p><b>{land.price}</b></p>
+            <p><b>{formatPropertyPrice(land.price)}</b></p>
 
             <p style={{ marginTop: 8 }}>{land.description}</p>
 

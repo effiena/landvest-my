@@ -4,6 +4,28 @@ import { useMemo, useState } from "react";
 import ImageCarousel from "@/components/ImageCarousel";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 
+function formatPropertyPrice(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return "Not specified";
+  }
+
+  const cleaned = String(value)
+    .replace(/^RM\s*/i, "")
+    .replace(/,/g, "")
+    .trim();
+
+  const number = Number(cleaned);
+
+  if (!Number.isFinite(number)) {
+    return String(value);
+  }
+
+  return `RM ${number.toLocaleString("en-MY", {
+    maximumFractionDigits: 0,
+  })}`;
+}
+
+
 function formatLandArea(land: any) {
   const value = land.areaValue ?? land.acreage ?? 0;
   const unit = land.areaUnit ?? "acre";
@@ -231,9 +253,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               </p>
 
               <p style={styles.price}>
-                RM{" "}
-                {String(land.price)
-                  .replace(/^RM\s*/i, "")}
+                {formatPropertyPrice(land.price)}
               </p>
 
               <p style={styles.desc}>
