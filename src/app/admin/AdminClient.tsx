@@ -119,6 +119,8 @@ export default function AdminClient({
     location: "",
     city: "",
     state: "",
+    propertyCategory: "",
+    propertyType: "",
     areaValue: "",
     areaUnit: "acre",
     price: "",
@@ -369,6 +371,8 @@ export default function AdminClient({
       location: land.location,
       city: land.city || "",
       state: land.state,
+      propertyCategory: land.propertyCategory || "",
+      propertyType: land.propertyType || "",
       areaValue: land.areaValue ?? land.acreage ?? "",
       areaUnit: land.areaUnit ?? "acre",
       price: land.price,
@@ -414,6 +418,12 @@ export default function AdminClient({
       select {
         box-sizing: border-box;
         max-width: 100%;
+        min-height: 44px;
+        font-size: 16px !important;
+      }
+
+      textarea {
+        min-height: 100px;
       }
 
       .propvest-area-row {
@@ -1691,6 +1701,74 @@ export default function AdminClient({
             <input name="location" placeholder="Location" value={form.location} onChange={handleChange} style={styles.input} />
             <input name="city" placeholder="City" value={form.city} onChange={handleChange} style={styles.input} />
             <input name="state" placeholder="State" value={form.state} onChange={handleChange} style={styles.input} />
+
+            <select
+              name="propertyCategory"
+              value={form.propertyCategory}
+              onChange={(e) => {
+                setForm({
+                  ...form,
+                  propertyCategory: e.target.value,
+                  propertyType: "",
+                });
+              }}
+              style={styles.input}
+            >
+              <option value="">Select Property Category</option>
+              <option value="HOUSE">🏠 House</option>
+              <option value="HIGH_RISE">🏢 High-Rise</option>
+              <option value="LAND">🌳 Land</option>
+              <option value="COMMERCIAL">🏬 Commercial</option>
+            </select>
+
+            <select
+              name="propertyType"
+              value={form.propertyType}
+              onChange={handleChange}
+              disabled={!form.propertyCategory}
+              style={styles.input}
+            >
+              <option value="">Select Property Type</option>
+
+              {form.propertyCategory === "HOUSE" && (
+                <>
+                  <option value="Terrace House">Terrace House</option>
+                  <option value="Semi-D">Semi-D</option>
+                  <option value="Bungalow">Bungalow</option>
+                  <option value="Cluster House">Cluster House</option>
+                  <option value="Townhouse">Townhouse</option>
+                </>
+              )}
+
+              {form.propertyCategory === "HIGH_RISE" && (
+                <>
+                  <option value="Condominium">Condominium</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="Service Residence">Service Residence</option>
+                  <option value="Flat">Flat</option>
+                </>
+              )}
+
+              {form.propertyCategory === "LAND" && (
+                <>
+                  <option value="Residential Land">Residential Land</option>
+                  <option value="Agricultural Land">Agricultural Land</option>
+                  <option value="Commercial Land">Commercial Land</option>
+                  <option value="Industrial Land">Industrial Land</option>
+                </>
+              )}
+
+              {form.propertyCategory === "COMMERCIAL" && (
+                <>
+                  <option value="Shoplot">Shoplot</option>
+                  <option value="Office">Office</option>
+                  <option value="Factory">Factory</option>
+                  <option value="Warehouse">Warehouse</option>
+                  <option value="Commercial Building">Commercial Building</option>
+                </>
+              )}
+            </select>
+
             <div style={styles.areaRow}>
               <input
                 name="areaValue"
@@ -1799,6 +1877,8 @@ export default function AdminClient({
                     location: "",
                     city: "",
                     state: "",
+                    propertyCategory: "",
+                    propertyType: "",
                     areaValue: "",
                     areaUnit: "acre",
                     price: "",

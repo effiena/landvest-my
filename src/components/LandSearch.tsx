@@ -43,8 +43,39 @@ function formatLandArea(land: any) {
 
 export default function LandSearch({ lands }: { lands: any[] }) {
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+  const [propertyType, setPropertyType] = useState("all");
   const [state, setState] = useState("all");
   const [city, setCity] = useState("all");
+
+  const PROPERTY_TYPES: Record<string, string[]> = {
+    HOUSE: [
+      "Terrace House",
+      "Semi-D",
+      "Bungalow",
+      "Cluster House",
+      "Townhouse",
+    ],
+    HIGH_RISE: [
+      "Condominium",
+      "Apartment",
+      "Service Residence",
+      "Flat",
+    ],
+    LAND: [
+      "Residential Land",
+      "Agricultural Land",
+      "Commercial Land",
+      "Industrial Land",
+    ],
+    COMMERCIAL: [
+      "Shoplot",
+      "Office",
+      "Factory",
+      "Warehouse",
+      "Commercial Building",
+    ],
+  };
 
   const MALAYSIA_STATES = [
     "Johor",
@@ -68,22 +99,34 @@ export default function LandSearch({ lands }: { lands: any[] }) {
   const states = MALAYSIA_STATES;
 
   const cities = useMemo(() => {
-    const filteredByState =
-      state === "all"
-        ? lands
-        : lands.filter(
-            (land) =>
-              land.state?.toLowerCase() === state.toLowerCase()
-          );
+    const filteredByFilters = lands.filter((land) => {
+      const matchesCategory =
+        category === "all" ||
+        land.propertyCategory === category;
+
+      const matchesPropertyType =
+        propertyType === "all" ||
+        land.propertyType === propertyType;
+
+      const matchesState =
+        state === "all" ||
+        land.state?.toLowerCase() === state.toLowerCase();
+
+      return (
+        matchesCategory &&
+        matchesPropertyType &&
+        matchesState
+      );
+    });
 
     return Array.from(
       new Set(
-        filteredByState
+        filteredByFilters
           .map((land) => land.city)
           .filter(Boolean)
       )
     ).sort();
-  }, [lands, state]);
+  }, [lands, category, propertyType, state]);
 
   const filteredLands = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -95,6 +138,8 @@ export default function LandSearch({ lands }: { lands: any[] }) {
         land.state,
         land.city,
         land.description,
+        land.propertyCategory,
+        land.propertyType,
         land.acreage,
         land.price,
       ]
@@ -105,6 +150,14 @@ export default function LandSearch({ lands }: { lands: any[] }) {
       const matchesSearch =
         query === "" || searchableText.includes(query);
 
+      const matchesCategory =
+        category === "all" ||
+        land.propertyCategory === category;
+
+      const matchesPropertyType =
+        propertyType === "all" ||
+        land.propertyType === propertyType;
+
       const matchesState =
         state === "all" ||
         land.state?.toLowerCase() === state.toLowerCase();
@@ -113,9 +166,37 @@ export default function LandSearch({ lands }: { lands: any[] }) {
         city === "all" ||
         land.city?.toLowerCase() === city.toLowerCase();
 
-      return matchesSearch && matchesState && matchesCity;
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesPropertyType &&
+        matchesState &&
+        matchesCity
+      );
     });
-  }, [lands, search, state, city]);
+  }, [
+    lands,
+    search,
+    category,
+    propertyType,
+    state,
+    city,
+  ]);
+
+  const handleCategoryChange = (
+    value: string
+  ) => {
+    setCategory(value);
+    setPropertyType("all");
+    setCity("all");
+  };
+
+  const handlePropertyTypeChange = (
+    value: string
+  ) => {
+    setPropertyType(value);
+    setCity("all");
+  };
 
   const handleStateChange = (
     value: string
@@ -126,25 +207,107 @@ export default function LandSearch({ lands }: { lands: any[] }) {
 
   const clearFilters = () => {
     setSearch("");
+    setCategory("all");
+    setPropertyType("all");
     setState("all");
     setCity("all");
   };
 
   const hasFilters =
     search ||
+    category !== "all" ||
+    propertyType !== "all" ||
     state !== "all" ||
     city !== "all";
 
   return (
     <>
+      <style>{`
+        @media (max-width: 600px) {
+          .propvest-sales-category-access {
+            margin-left: 12px !important;
+            margin-right: 12px !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+          .propvest-sales-filters {
+            margin-left: 12px !important;
+            margin-right: 12px !important;
+            padding: 12px !important;
+          }
+          .propvest-sales-filters input,
+          .propvest-sales-filters select {
+            box-sizing: border-box;
+            min-height: 44px;
+            min-width: 0;
+            font-size: 16px !important;
+          }
+          .propvest-sales-results {
+            margin-left: 12px !important;
+            margin-right: 12px !important;
+          }
+          .propvest-sales-grid {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+          }
+        }
+      `}</style>
+      {/* SALES CATEGORY QUICK ACCESS */}
+      <section className="propvest-sales-category-access" style={styles.categoryQuickAccess}>
+        {[
+          {
+            value: "HOUSE",
+            label: "Houses",
+            icon: "🏠",
+          },
+          {
+            value: "HIGH_RISE",
+            label: "High-Rise",
+            icon: "🏢",
+          },
+          {
+            value: "LAND",
+            label: "Land",
+            icon: "🌳",
+          },
+          {
+            value: "COMMERCIAL",
+            label: "Commercial",
+            icon: "🏬",
+          },
+        ].map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            onClick={() =>
+              handleCategoryChange(
+                category === item.value
+                  ? "all"
+                  : item.value
+              )
+            }
+            aria-pressed={category === item.value}
+            style={{
+              ...styles.categoryQuickButton,
+              ...(category === item.value
+                ? styles.categoryQuickButtonActive
+                : {}),
+            }}
+          >
+            <span>{item.icon}</span>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </section>
+
       {/* SEARCH & FILTER */}
-      <section style={styles.filterSection}>
+      <section className="propvest-sales-filters" style={styles.filterSection}>
         <div style={styles.searchBox}>
           <span style={styles.searchIcon}>🔎</span>
 
           <input
             type="text"
-            placeholder="Search land, location, state, city..."
+            placeholder="Search property, location, state, city..."
             value={search}
             onChange={(e) =>
               setSearch(e.target.value)
@@ -152,6 +315,61 @@ export default function LandSearch({ lands }: { lands: any[] }) {
             style={styles.searchInput}
           />
         </div>
+
+        {/* PROPERTY CATEGORY */}
+        <select
+          value={category}
+          onChange={(e) =>
+            handleCategoryChange(e.target.value)
+          }
+          style={styles.filterSelect}
+        >
+          <option value="all">
+            🏘️ All Property Categories
+          </option>
+
+          <option value="HOUSE">
+            🏠 Houses
+          </option>
+
+          <option value="HIGH_RISE">
+            🏢 High-Rise
+          </option>
+
+          <option value="LAND">
+            🌳 Land
+          </option>
+
+          <option value="COMMERCIAL">
+            🏬 Commercial
+          </option>
+        </select>
+
+        {/* PROPERTY TYPE */}
+        <select
+          value={propertyType}
+          onChange={(e) =>
+            handlePropertyTypeChange(e.target.value)
+          }
+          style={styles.filterSelect}
+          disabled={category === "all"}
+        >
+          <option value="all">
+            🏷️ All Property Types
+          </option>
+
+          {(category !== "all"
+            ? PROPERTY_TYPES[category] || []
+            : []
+          ).map((item) => (
+            <option
+              key={item}
+              value={item}
+            >
+              {item}
+            </option>
+          ))}
+        </select>
 
         {/* STATE */}
         <select
@@ -209,7 +427,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
       </section>
 
       {/* RESULT COUNT */}
-      <div style={styles.resultCount}>
+      <div className="propvest-sales-results" style={styles.resultCount}>
         Showing{" "}
         <strong>
           {filteredLands.length}
@@ -222,7 +440,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
       </div>
 
       {/* GRID */}
-      <section style={styles.grid}>
+      <section className="propvest-sales-grid" style={styles.grid}>
         {filteredLands.map((land) => (
           <article
             key={land.id}
@@ -248,8 +466,14 @@ export default function LandSearch({ lands }: { lands: any[] }) {
                   : ""}
               </p>
 
+              {land.propertyType && (
+                <p style={styles.text}>
+                  🏷️ {land.propertyType}
+                </p>
+              )}
+
               <p style={styles.text}>
-                🌾 {formatLandArea(land)}
+                📐 {formatLandArea(land)}
               </p>
 
               <p style={styles.price}>
@@ -283,12 +507,12 @@ export default function LandSearch({ lands }: { lands: any[] }) {
           </div>
 
           <h3>
-            No land listings found
+            No property listings found
           </h3>
 
           <p>
-            Try another keyword, state,
-            or city.
+            Try another keyword, property type,
+            state, or city.
           </p>
 
           <button
@@ -304,6 +528,39 @@ export default function LandSearch({ lands }: { lands: any[] }) {
 }
 
 const styles: any = {
+  categoryQuickAccess: {
+    margin: "0 40px 15px",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+    gap: 12,
+  },
+
+  categoryQuickButton: {
+    minHeight: 72,
+    padding: "12px 10px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    background: "#FFFFFF",
+    color: "#1E3A8A",
+    border: "1px solid #E2E8F0",
+    borderRadius: 12,
+    boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    textAlign: "center",
+  },
+
+  categoryQuickButtonActive: {
+    background: "#1E3A8A",
+    color: "#FFFFFF",
+    border: "1px solid #1E3A8A",
+    boxShadow: "0 4px 12px rgba(30,58,138,0.2)",
+  },
+
   filterSection: {
     margin: "0 40px 15px",
     padding: 15,

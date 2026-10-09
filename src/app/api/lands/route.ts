@@ -15,6 +15,8 @@ export async function POST(req: NextRequest) {
       location,
       city,
       state,
+      propertyCategory,
+      propertyType,
       areaValue,
       areaUnit,
       acreage,
@@ -180,6 +182,9 @@ export async function POST(req: NextRequest) {
         location: location.trim(),
         city: city?.trim() || null,
         state: state.trim(),
+
+        propertyCategory: propertyCategory?.trim() || null,
+        propertyType: propertyType?.trim() || null,
 
         acreage: Number(acreage) || 0,
 

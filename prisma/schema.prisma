@@ -113,21 +113,23 @@ model ListingCreditPurchase {
 }
 
 model Land {
-  id          Int         @id @default(autoincrement())
-  agentId     Int
-  title       String
-  location    String
-  state       String
-  acreage     Float
-  price       String
-  description String
-  whatsapp    String
-  createdAt   DateTime    @default(now())
-  areaValue   Float?
-  areaUnit    String?
-  city        String?
-  agent       Agent       @relation(fields: [agentId], references: [id])
-  images      LandImage[]
+  id               Int         @id @default(autoincrement())
+  agentId          Int
+  title            String
+  location         String
+  state            String
+  propertyCategory String?
+  propertyType     String?
+  acreage          Float
+  price            String
+  description      String
+  whatsapp         String
+  createdAt        DateTime    @default(now())
+  areaValue        Float?
+  areaUnit         String?
+  city             String?
+  agent            Agent       @relation(fields: [agentId], references: [id])
+  images           LandImage[]
 }
 
 model LandImage {

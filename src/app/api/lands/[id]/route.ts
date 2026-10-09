@@ -18,7 +18,10 @@ export async function PUT(
       data: {
         title: body.title,
         location: body.location,
+        city: body.city || null,
         state: body.state,
+        propertyCategory: body.propertyCategory || null,
+        propertyType: body.propertyType || null,
         acreage: Number(body.acreage) || 0,
         areaValue:
            body.areaValue !== undefined && body.areaValue !== null
