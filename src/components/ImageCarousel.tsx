@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 
 export default function ImageCarousel({
   images,
+  variant = "card",
 }: {
   images: any[];
+  variant?: "card" | "detail";
 }) {
   const [current, setCurrent] = useState(0);
   const [showLarge, setShowLarge] = useState(false);
@@ -30,7 +32,7 @@ export default function ImageCarousel({
 
   if (!images || images.length === 0) {
     return (
-      <div style={styles.noImage}>
+      <div style={{ ...styles.noImage, height: variant === "detail" ? "min(52vh, 520px)" : 220 }}>
         No Image
       </div>
     );
@@ -56,12 +58,23 @@ export default function ImageCarousel({
 
 
   return (
-    <div style={styles.container}>
+    <div
+      style={{
+        ...styles.container,
+        height: variant === "detail" ? "min(52vh, 520px)" : 220,
+        background: variant === "detail" ? "#0F172A" : undefined,
+      }}
+    >
 
       <img
         src={images[current].url}
         alt="Property"
-        style={styles.image}
+        style={{
+          ...styles.image,
+          height: "100%",
+          objectFit: variant === "detail" ? "contain" : "cover",
+          display: "block",
+        }}
         onClick={() => setShowLarge(true)}
       />
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ImageCarousel from "@/components/ImageCarousel";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 
@@ -47,6 +47,24 @@ export default function LandSearch({ lands }: { lands: any[] }) {
   const [propertyType, setPropertyType] = useState("all");
   const [state, setState] = useState("all");
   const [city, setCity] = useState("all");
+  const [selectedLand, setSelectedLand] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (!selectedLand) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedLand(null);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedLand]);
 
   const PROPERTY_TYPES: Record<string, string[]> = {
     HOUSE: [
@@ -223,7 +241,16 @@ export default function LandSearch({ lands }: { lands: any[] }) {
   return (
     <>
       <style>{`
-        @media (max-width: 600px) {
+        @media (min-width: 760px) {
+    .propvest-detail-body {
+      grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr) !important;
+      gap: 28px !important;
+      padding: 28px !important;
+      align-items: start;
+    }
+  }
+
+  @media (max-width: 600px) {
           .propvest-sales-category-access {
             margin-left: 12px !important;
             margin-right: 12px !important;
@@ -450,7 +477,19 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               images={land.images}
             />
 
-            <div style={styles.content}>
+            <div
+              style={{ ...styles.content, cursor: "pointer" }}
+              onClick={() => setSelectedLand(land)}
+              role="button"
+              tabIndex={0}
+              aria-label={`View details for ${land.title}`}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedLand(land);
+                }
+              }}
+            >
               <h2 style={styles.cardTitle}>
                 {land.title}
               </h2>
@@ -491,6 +530,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={styles.whatsapp}
+                onClick={(event) => event.stopPropagation()}
               >
                 WhatsApp Agent
               </a>
@@ -521,6 +561,92 @@ export default function LandSearch({ lands }: { lands: any[] }) {
           >
             Clear Filters
           </button>
+        </div>
+      )}
+
+      {selectedLand && (
+        <div
+          style={styles.detailOverlay}
+          onClick={() => setSelectedLand(null)}
+          role="presentation"
+        >
+          <section
+            style={styles.detailModal}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedLand.title} property details`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div style={styles.detailHeader}>
+              <h2 style={styles.detailHeading}>
+                {selectedLand.title}
+              </h2>
+              <button
+                type="button"
+                style={styles.detailClose}
+                onClick={() => setSelectedLand(null)}
+                aria-label="Close property details"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="propvest-detail-body" style={styles.detailBody}>
+              <div style={styles.detailGallery}>
+                <ImageCarousel images={selectedLand.images ?? []} variant="detail" />
+              </div>
+
+              <div style={styles.detailInformation}>
+                <p style={styles.detailPrice}>
+                  {formatPropertyPrice(selectedLand.price)}
+                </p>
+
+                <p style={styles.detailText}>
+                  📍 {selectedLand.location || "Location not specified"}
+                </p>
+
+                <p style={styles.detailText}>
+                  🗺️ {[selectedLand.city, selectedLand.state]
+                    .filter(Boolean)
+                    .join(", ") || "Area not specified"}
+                </p>
+
+                {selectedLand.propertyCategory && (
+                  <p style={styles.detailText}>
+                    🏠 {selectedLand.propertyCategory}
+                  </p>
+                )}
+
+                {selectedLand.propertyType && (
+                  <p style={styles.detailText}>
+                    🏷️ {selectedLand.propertyType}
+                  </p>
+                )}
+
+                <p style={styles.detailText}>
+                  📐 {formatLandArea(selectedLand)}
+                </p>
+
+                <div style={styles.detailDescription}>
+                  <h3 style={styles.detailSectionTitle}>
+                    Property Description
+                  </h3>
+                  <p>
+                    {selectedLand.description || "No description provided."}
+                  </p>
+                </div>
+
+                <a
+                  href={getWhatsAppLink(selectedLand.whatsapp)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={styles.whatsapp}
+                >
+                  WhatsApp Agent
+                </a>
+              </div>
+            </div>
+          </section>
         </div>
       )}
     </>
@@ -646,6 +772,110 @@ const styles: any = {
     overflow: "hidden",
     boxShadow:
       "0 6px 18px rgba(0,0,0,0.08)",
+  },
+
+  detailOverlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 9000,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    background: "rgba(15, 23, 42, 0.76)",
+    overflowY: "auto",
+  },
+
+  detailModal: {
+    width: "min(1440px, 100%)",
+    maxHeight: "calc(100vh - 24px)",
+    overflowY: "auto",
+    background: "#FFFFFF",
+    color: "#0F172A",
+    borderRadius: 16,
+    boxShadow: "0 24px 70px rgba(0, 0, 0, 0.3)",
+  },
+
+  detailHeader: {
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: "16px 20px",
+    background: "#FFFFFF",
+    borderBottom: "1px solid #E2E8F0",
+  },
+
+  detailHeading: {
+    margin: 0,
+    fontSize: 22,
+    lineHeight: 1.35,
+    color: "#0F172A",
+    overflowWrap: "anywhere",
+  },
+
+  detailClose: {
+    flexShrink: 0,
+    width: 40,
+    height: 40,
+    border: "none",
+    borderRadius: 10,
+    background: "#E2E8F0",
+    color: "#0F172A",
+    fontSize: 30,
+    lineHeight: 1,
+    cursor: "pointer",
+  },
+
+  detailBody: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    gap: 18,
+    padding: 20,
+  },
+
+  detailGallery: {
+    minWidth: 0,
+    overflow: "hidden",
+    borderRadius: 12,
+  },
+
+  detailInformation: {
+    minWidth: 0,
+    overflowWrap: "anywhere",
+  },
+
+  detailPrice: {
+    margin: "0 0 16px",
+    fontSize: 26,
+    lineHeight: 1.3,
+    fontWeight: 800,
+    color: "#1E3A8A",
+  },
+
+  detailText: {
+    margin: "0 0 12px",
+    color: "#334155",
+    fontSize: 16,
+    lineHeight: 1.5,
+  },
+
+  detailDescription: {
+    marginTop: 20,
+    color: "#334155",
+    fontSize: 16,
+    lineHeight: 1.7,
+    whiteSpace: "pre-line",
+    overflowWrap: "anywhere",
+  },
+
+  detailSectionTitle: {
+    margin: "0 0 8px",
+    color: "#0F172A",
+    fontSize: 18,
   },
 
   content: {
