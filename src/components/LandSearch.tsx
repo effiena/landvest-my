@@ -471,10 +471,21 @@ export default function LandSearch({ lands }: { lands: any[] }) {
         {filteredLands.map((land) => (
           <article
             key={land.id}
-            style={styles.card}
+            style={{ ...styles.card, cursor: "pointer" }}
+            onClick={() => setSelectedLand(land)}
+            role="button"
+            tabIndex={0}
+            aria-label={`View details for ${land.title}`}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setSelectedLand(land);
+              }
+            }}
           >
             <ImageCarousel
               images={land.images}
+              onCardClick={() => setSelectedLand(land)}
             />
 
             <div

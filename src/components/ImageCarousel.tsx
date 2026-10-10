@@ -7,9 +7,11 @@ import { useEffect, useState } from "react";
 export default function ImageCarousel({
   images,
   variant = "card",
+  onCardClick,
 }: {
   images: any[];
   variant?: "card" | "detail";
+  onCardClick?: () => void;
 }) {
   const [current, setCurrent] = useState(0);
   const [showLarge, setShowLarge] = useState(false);
@@ -75,14 +77,23 @@ export default function ImageCarousel({
           objectFit: variant === "detail" ? "contain" : "cover",
           display: "block",
         }}
-        onClick={() => setShowLarge(true)}
+        onClick={() => {
+          if (variant === "card" && onCardClick) {
+            onCardClick();
+          } else {
+            setShowLarge(true);
+          }
+        }}
       />
 
 
       {images.length > 1 && (
         <>
           <button
-            onClick={prevImage}
+            onClick={(event) => {
+              event.stopPropagation();
+              prevImage();
+            }}
             style={styles.left}
           >
             ‹
@@ -90,7 +101,10 @@ export default function ImageCarousel({
 
 
           <button
-            onClick={nextImage}
+            onClick={(event) => {
+              event.stopPropagation();
+              nextImage();
+            }}
             style={styles.right}
           >
             ›
@@ -101,7 +115,10 @@ export default function ImageCarousel({
             {images.map((_:any,index:number)=>(
               <span
                 key={index}
-                onClick={()=>setCurrent(index)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setCurrent(index);
+                }}
                 style={{
                   ...styles.dot,
                   opacity:
