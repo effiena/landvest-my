@@ -288,6 +288,18 @@ export default function LandSearch({ lands }: { lands: any[] }) {
             padding-left: 8px !important;
             padding-right: 8px !important;
           }
+          .propvest-sales-filters > div {
+            flex: 1 1 100% !important;
+            width: 100% !important;
+            min-width: 0 !important;
+          }
+          .propvest-sales-filters > select {
+            flex: 1 1 calc(50% - 4px) !important;
+            width: calc(50% - 4px) !important;
+            min-width: 0 !important;
+            padding-left: 7px !important;
+            padding-right: 4px !important;
+          }
           .propvest-sales-results {
             margin-left: 8px !important;
             margin-right: 8px !important;
