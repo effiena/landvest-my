@@ -53,11 +53,11 @@ export default function Navbar() {
         style={styles.right}
       >
         <Link
-          href="/want-to-buy"
+          href="/admin"
           onClick={closeMenu}
           style={styles.wtbBtn}
         >
-          Want To Buy
+          Dashboard
         </Link>
 
         <Link
@@ -78,14 +78,6 @@ export default function Navbar() {
           </Link>
         ) : (
           <>
-            <Link
-              href="/admin"
-              onClick={closeMenu}
-              style={styles.btn}
-            >
-              Dashboard
-            </Link>
-
             <button
               onClick={handleLogout}
               style={styles.logout}

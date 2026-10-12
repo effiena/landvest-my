@@ -108,13 +108,6 @@ export default async function Home() {
             <SellPropertyButton />
           </div>
 
-          <Link href="/login" style={styles.btnDark}>
-            Login
-          </Link>
-
-          <Link href="/admin" style={styles.btnBlue}>
-            Dashboard
-          </Link>
         </div>
       </section>
 

@@ -252,29 +252,49 @@ export default function LandSearch({ lands }: { lands: any[] }) {
 
   @media (max-width: 600px) {
           .propvest-sales-category-access {
-            margin-left: 12px !important;
-            margin-right: 12px !important;
+            margin-left: 8px !important;
+            margin-right: 8px !important;
+            margin-bottom: 10px !important;
+            gap: 8px !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
+          .propvest-sales-category-access button {
+            min-height: 56px !important;
+            padding: 7px 6px !important;
+            gap: 3px !important;
+            font-size: 12px !important;
+            border-radius: 9px !important;
+          }
           .propvest-sales-filters {
-            margin-left: 12px !important;
-            margin-right: 12px !important;
-            padding: 12px !important;
+            margin-left: 8px !important;
+            margin-right: 8px !important;
+            margin-bottom: 10px !important;
+            padding: 9px !important;
+            gap: 7px !important;
+            border-radius: 10px !important;
           }
           .propvest-sales-filters input,
           .propvest-sales-filters select {
             box-sizing: border-box;
-            min-height: 44px;
+            min-height: 40px !important;
             min-width: 0;
             font-size: 16px !important;
           }
+          .propvest-sales-filters input {
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+          }
+          .propvest-sales-filters select {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+          }
           .propvest-sales-results {
-            margin-left: 12px !important;
-            margin-right: 12px !important;
+            margin-left: 8px !important;
+            margin-right: 8px !important;
           }
           .propvest-sales-grid {
-            padding-left: 12px !important;
-            padding-right: 12px !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
             grid-template-columns: minmax(0, 1fr) !important;
           }
         }
@@ -489,61 +509,41 @@ export default function LandSearch({ lands }: { lands: any[] }) {
             />
 
             <div
-              style={{ ...styles.content, cursor: "pointer" }}
-              onClick={() => setSelectedLand(land)}
-              role="button"
-              tabIndex={0}
-              aria-label={`View details for ${land.title}`}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  setSelectedLand(land);
-                }
+              style={{
+                ...styles.content,
+                cursor: "pointer",
+                padding: "14px 16px",
               }}
             >
-              <h2 style={styles.cardTitle}>
+              <h2 style={{ ...styles.cardTitle, margin: "0 0 8px" }}>
                 {land.title}
               </h2>
 
-              <p style={styles.text}>
-                📍 {land.location}
+              <p style={{ ...styles.text, margin: "5px 0", fontSize: 14 }}>
+                📍 {land.location || [land.city, land.state].filter(Boolean).join(", ") || "Location not specified"}
               </p>
 
-              <p style={styles.text}>
-                🗺️ {land.state}
-                {land.city
-                  ? ` • ${land.city}`
-                  : ""}
-              </p>
-
-              {land.propertyType && (
-                <p style={styles.text}>
-                  🏷️ {land.propertyType}
-                </p>
-              )}
-
-              <p style={styles.text}>
+              <p style={{ ...styles.text, margin: "5px 0", fontSize: 14 }}>
                 📐 {formatLandArea(land)}
               </p>
 
-              <p style={styles.price}>
+              <p style={{ ...styles.price, margin: "10px 0 12px" }}>
                 {formatPropertyPrice(land.price)}
               </p>
 
-              <p style={styles.desc}>
-                {land.description}
-              </p>
-
               <a
-                href={getWhatsAppLink(
-                  land.whatsapp
-                )}
+                href={getWhatsAppLink(land.whatsapp)}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={styles.whatsapp}
+                style={{
+                  ...styles.whatsapp,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
                 onClick={(event) => event.stopPropagation()}
               >
-                WhatsApp Agent
+                WhatsApp Contact
               </a>
             </div>
           </article>
