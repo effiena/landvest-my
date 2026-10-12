@@ -363,35 +363,6 @@ export default function LandSearch({ lands }: { lands: any[] }) {
           />
         </div>
 
-        {/* PROPERTY CATEGORY */}
-        <select
-          value={category}
-          onChange={(e) =>
-            handleCategoryChange(e.target.value)
-          }
-          style={styles.filterSelect}
-        >
-          <option value="all">
-            🏘️ All Property Categories
-          </option>
-
-          <option value="HOUSE">
-            🏠 Houses
-          </option>
-
-          <option value="HIGH_RISE">
-            🏢 High-Rise
-          </option>
-
-          <option value="LAND">
-            🌳 Land
-          </option>
-
-          <option value="COMMERCIAL">
-            🏬 Commercial
-          </option>
-        </select>
-
         {/* PROPERTY TYPE */}
         <select
           value={propertyType}
@@ -431,29 +402,6 @@ export default function LandSearch({ lands }: { lands: any[] }) {
           </option>
 
           {states.map((item) => (
-            <option
-              key={item}
-              value={item}
-            >
-              {item}
-            </option>
-          ))}
-        </select>
-
-        {/* CITY */}
-        <select
-          value={city}
-          onChange={(e) =>
-            setCity(e.target.value)
-          }
-          style={styles.filterSelect}
-          disabled={cities.length === 0}
-        >
-          <option value="all">
-            🏙️ All Cities
-          </option>
-
-          {cities.map((item) => (
             <option
               key={item}
               value={item}
