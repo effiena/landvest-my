@@ -156,3 +156,25 @@ model Visitor {
   @@index([visitorId])
   @@index([createdAt])
 }
+
+model DiscoveredLead {
+  id           Int      @id @default(autoincrement())
+  sourceName   String
+  sourceUrl    String   @unique
+  excerpt      String?
+  city         String?
+  propertyType String?
+  budgetMin    Float?
+  budgetMax    Float?
+  requiredSize String?
+  leadScore    Int      @default(0)
+  status       String   @default("pending")
+  reviewNotes  String?
+  discoveredAt DateTime @default(now())
+  reviewedAt   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([city, propertyType])
+}

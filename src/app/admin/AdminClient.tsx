@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -29,12 +29,478 @@ function formatPropertyPrice(value: unknown) {
   })}`;
 }
 
+
+function leadMoneyValue(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+
+  const raw = String(value).trim().toLowerCase();
+  const multiplier = raw.endsWith("million") || raw.endsWith("m")
+    ? 1_000_000
+    : raw.endsWith("thousand") || raw.endsWith("k")
+      ? 1_000
+      : 1;
+
+  const cleaned = raw
+    .replace(/rm/gi, "")
+    .replace(/,/g, "")
+    .replace(/million|thousand|[km]$/g, "")
+    .replace(/[^0-9.]/g, "");
+
+  const number = Number(cleaned);
+  return Number.isFinite(number) && number > 0
+    ? number * multiplier
+    : null;
+}
+
+function getBuyerLeadPriority(buyer: any) {
+  const now = Date.now();
+  const created = new Date(buyer.createdAt).getTime();
+  const ageDays = Number.isFinite(created)
+    ? Math.max(0, (now - created) / 86_400_000)
+    : 999;
+
+  let score = 0;
+  const reasons: string[] = [];
+
+  if (buyer.status === "new") {
+    score += 20;
+    reasons.push("Needs first contact");
+  } else if (buyer.status === "contacted") {
+    score += 8;
+    reasons.push("Follow-up may be needed");
+  }
+
+  if (ageDays <= 1) {
+    score += 20;
+    reasons.push("Received within 24 hours");
+  } else if (ageDays <= 3) {
+    score += 15;
+    reasons.push("Recent enquiry");
+  } else if (ageDays <= 7) {
+    score += 10;
+    reasons.push("Enquiry within 7 days");
+  } else {
+    score += 5;
+    reasons.push("Older enquiry — review follow-up");
+  }
+
+  if (String(buyer.budget || "").trim()) {
+    score += 15;
+    reasons.push("Budget provided");
+  }
+
+  if (String(buyer.propertyType || "").trim()) {
+    score += 10;
+    reasons.push("Property type specified");
+  }
+
+  if (String(buyer.city || "").trim()) {
+    score += 10;
+    reasons.push("Preferred location provided");
+  }
+
+  if (
+    Number(buyer.estimatedPropertyPrice) > 0 ||
+    Number(buyer.estimatedLoan) > 0
+  ) {
+    score += 15;
+    reasons.push("Financing estimate available");
+  }
+
+  if (String(buyer.requiredSize || "").trim()) {
+    score += 10;
+    reasons.push("Size requirement specified");
+  }
+
+  return {
+    score: Math.min(100, score),
+    reasons,
+    ageDays,
+  };
+}
+
+function getBuyerPropertyMatch(buyer: any, lands: any[]) {
+  const buyerBudget = leadMoneyValue(buyer.budget);
+  const buyerType = String(buyer.propertyType || "").trim().toLowerCase();
+  const buyerCity = String(buyer.city || "").trim().toLowerCase();
+
+  const ranked = lands.map((land: any) => {
+    const reasons: string[] = [];
+    let score = 0;
+
+    const listingType = String(land.propertyType || "").trim().toLowerCase();
+    const listingCategory = String(land.propertyCategory || "").trim().toLowerCase();
+    const listingCity = String(land.city || "").trim().toLowerCase();
+    const listingState = String(land.state || "").trim().toLowerCase();
+    const listingLocation = String(land.location || "").trim().toLowerCase();
+    const listingPrice = leadMoneyValue(land.price);
+
+    if (
+      buyerType &&
+      listingType &&
+      (listingType === buyerType ||
+        listingCategory === buyerType ||
+        listingType.includes(buyerType) ||
+        buyerType.includes(listingType))
+    ) {
+      score += 40;
+      reasons.push("Property type matches");
+    }
+
+    if (
+      buyerCity &&
+      (listingCity === buyerCity ||
+        (listingLocation && listingLocation.includes(buyerCity)) ||
+        (listingCity && buyerCity.includes(listingCity)))
+    ) {
+      score += 35;
+      reasons.push("Location matches");
+    } else if (
+      buyerCity &&
+      listingState &&
+      buyerCity.includes(listingState)
+    ) {
+      score += 15;
+      reasons.push("Possible state-level location match");
+    }
+
+    if (buyerBudget !== null && listingPrice !== null) {
+      if (listingPrice <= buyerBudget) {
+        score += 25;
+        reasons.push("Asking price within stated budget");
+      } else if (listingPrice <= buyerBudget * 1.1) {
+        score += 10;
+        reasons.push("Asking price up to 10% above budget");
+      }
+    }
+
+    return { land, score, reasons };
+  });
+
+  return ranked
+    .filter((item: any) => item.score > 0)
+    .sort((a: any, b: any) => b.score - a.score)
+    .slice(0, 1);
+}
+
+
+function DiscoveredLeadReviewPanel() {
+  const [leads, setLeads] = useState<any[]>([]);
+  const [status, setStatus] = useState("pending");
+  const [loadingLeads, setLoadingLeads] = useState(false);
+  const [leadError, setLeadError] = useState("");
+  const [notes, setNotes] = useState<Record<number, string>>({});
+  const [busyLeadId, setBusyLeadId] = useState<number | null>(null);
+
+  const loadLeads = async () => {
+    setLoadingLeads(true);
+    setLeadError("");
+    try {
+      const response = await fetch(
+        `/api/ai-leads?status=${encodeURIComponent(status)}&limit=100`,
+        { cache: "no-store" }
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to load lead candidates.");
+      }
+      setLeads(Array.isArray(data.leads) ? data.leads : []);
+      setNotes((current) => {
+        const next = { ...current };
+        for (const lead of data.leads || []) {
+          if (next[lead.id] === undefined) {
+            next[lead.id] = lead.reviewNotes || "";
+          }
+        }
+        return next;
+      });
+    } catch (error: any) {
+      setLeadError(
+        error?.message ||
+          "Unable to load leads. The database migration may still be pending."
+      );
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadLeads();
+  }, [status]);
+
+  const reviewLead = async (
+    id: number,
+    nextStatus: "approved" | "dismissed" | "pending"
+  ) => {
+    setBusyLeadId(id);
+    setLeadError("");
+    try {
+      const response = await fetch(`/api/ai-leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: nextStatus,
+          reviewNotes: notes[id] || "",
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to update this lead.");
+      }
+      await loadLeads();
+    } catch (error: any) {
+      setLeadError(error?.message || "Unable to update this lead.");
+    } finally {
+      setBusyLeadId(null);
+    }
+  };
+
+  const saveNotes = async (id: number) => {
+    await reviewLead(id, leads.find((lead) => lead.id === id)?.status || "pending");
+  };
+
+  return (
+    <section
+      aria-label="AI Lead Discovery and Review"
+      style={{
+        background: "#ffffff",
+        border: "1px solid #dbe3ef",
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 22,
+        boxShadow: "0 4px 14px rgba(15, 23, 42, 0.05)",
+        color: "#111827",
+      }}
+    >
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        gap: 12,
+        flexWrap: "wrap",
+      }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 22, color: "#172554" }}>
+            🔎 AI Lead Discovery &amp; Review
+          </h2>
+          <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
+            Review saved public-source candidates. No messages are sent automatically.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void loadLeads()}
+          disabled={loadingLeads}
+          style={{
+            border: "1px solid #cbd5e1",
+            borderRadius: 9,
+            padding: "9px 12px",
+            background: "#f8fafc",
+            cursor: "pointer",
+          }}
+        >
+          {loadingLeads ? "Refreshing…" : "↻ Refresh"}
+        </button>
+      </div>
+
+      <div style={{
+        display: "flex",
+        gap: 10,
+        alignItems: "center",
+        flexWrap: "wrap",
+        margin: "14px 0",
+      }}>
+        <label htmlFor="discovered-lead-status" style={{ fontSize: 13, fontWeight: 700 }}>
+          Review status
+        </label>
+        <select
+          id="discovered-lead-status"
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+          style={{
+            padding: 9,
+            border: "1px solid #cbd5e1",
+            borderRadius: 8,
+            background: "#fff",
+            color: "#111827",
+          }}
+        >
+          <option value="pending">Pending review</option>
+          <option value="approved">Approved</option>
+          <option value="dismissed">Dismissed</option>
+          <option value="all">All candidates</option>
+        </select>
+        <span style={{ fontSize: 12, color: "#64748b" }}>
+          {leads.length} candidate{leads.length === 1 ? "" : "s"}
+        </span>
+      </div>
+
+      {leadError && (
+        <div role="alert" style={{
+          background: "#fff7ed",
+          color: "#9a3412",
+          border: "1px solid #fed7aa",
+          borderRadius: 9,
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 13,
+          lineHeight: 1.5,
+        }}>
+          {leadError}
+          <div style={{ marginTop: 5, fontSize: 12 }}>
+            If the discovered-leads migration is not applied yet, the table may not exist.
+          </div>
+        </div>
+      )}
+
+      {!loadingLeads && !leadError && leads.length === 0 && (
+        <div style={{
+          padding: 18,
+          borderRadius: 10,
+          background: "#f8fafc",
+          color: "#64748b",
+          fontSize: 13,
+          lineHeight: 1.6,
+        }}>
+          No saved candidates in this view yet. Public-source discovery has not been connected;
+          candidates will appear here once they are collected through permitted sources and saved.
+        </div>
+      )}
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {leads.map((lead) => (
+          <article key={lead.id} style={{
+            border: "1px solid #e2e8f0",
+            borderRadius: 12,
+            padding: 14,
+            minWidth: 0,
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+            }}>
+              <div style={{ minWidth: 0, flex: "1 1 240px" }}>
+                <strong style={{ overflowWrap: "anywhere" }}>
+                  {lead.sourceName}
+                </strong>
+                <div style={{ marginTop: 6, fontSize: 12, color: "#64748b" }}>
+                  {lead.city || "Location unspecified"}
+                  {" · "}
+                  {lead.propertyType || "Property type unspecified"}
+                </div>
+              </div>
+              <div style={{
+                borderRadius: 9,
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                padding: "7px 10px",
+                fontSize: 12,
+                fontWeight: 800,
+              }}>
+                Score: {lead.leadScore}/100
+              </div>
+            </div>
+
+            <div style={{ marginTop: 8, fontSize: 13, color: "#334155", lineHeight: 1.6 }}>
+              {lead.excerpt || "No excerpt supplied."}
+            </div>
+
+            <div style={{ marginTop: 8, fontSize: 12, color: "#475569" }}>
+              Budget:{" "}
+              {lead.budgetMin == null && lead.budgetMax == null
+                ? "Not provided"
+                : `RM ${lead.budgetMin == null ? "—" : Number(lead.budgetMin).toLocaleString()} – ${lead.budgetMax == null ? "—" : Number(lead.budgetMax).toLocaleString()}`}
+              {" · "}Size: {lead.requiredSize || "Not provided"}
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              <a
+                href={lead.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#1d4ed8", fontSize: 13, overflowWrap: "anywhere" }}
+              >
+                Open original source ↗
+              </a>
+            </div>
+
+            <label htmlFor={`lead-notes-${lead.id}`} style={{
+              display: "block",
+              marginTop: 12,
+              marginBottom: 5,
+              fontSize: 12,
+              fontWeight: 700,
+            }}>
+              Review notes
+            </label>
+            <textarea
+              id={`lead-notes-${lead.id}`}
+              value={notes[lead.id] ?? lead.reviewNotes ?? ""}
+              onChange={(event) =>
+                setNotes((current) => ({ ...current, [lead.id]: event.target.value }))
+              }
+              maxLength={2000}
+              rows={2}
+              placeholder="Add your assessment or follow-up reminder…"
+              style={{
+                boxSizing: "border-box",
+                width: "100%",
+                padding: 10,
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+                resize: "vertical",
+                color: "#111827",
+              }}
+            />
+
+            <div style={{
+              display: "flex",
+              gap: 8,
+              flexWrap: "wrap",
+              marginTop: 10,
+            }}>
+              <button
+                type="button"
+                disabled={busyLeadId === lead.id}
+                onClick={() => void saveNotes(lead.id)}
+                style={{ padding: "9px 12px", borderRadius: 8, border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}
+              >
+                Save notes
+              </button>
+              <button
+                type="button"
+                disabled={busyLeadId === lead.id}
+                onClick={() => void reviewLead(lead.id, "approved")}
+                style={{ padding: "9px 12px", borderRadius: 8, border: 0, background: "#dcfce7", color: "#166534", fontWeight: 700, cursor: "pointer" }}
+              >
+                Approve
+              </button>
+              <button
+                type="button"
+                disabled={busyLeadId === lead.id}
+                onClick={() => void reviewLead(lead.id, "dismissed")}
+                style={{ padding: "9px 12px", borderRadius: 8, border: 0, background: "#fee2e2", color: "#991b1b", fontWeight: 700, cursor: "pointer" }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function AdminClient({
   lands,
   agent,
   wantToBuy = [],
   wantToSell = [],
   contactMessages = [],
+  canUseAI = false,
 }: any) {
 
   const router = useRouter();
@@ -454,6 +920,27 @@ export default function AdminClient({
     }
   `;
 
+  const activeBuyerLeads = visibleWantToBuy.filter(
+    (buyer: any) => buyer.status !== "closed"
+  );
+  const activeSellerLeads = visibleWantToSell.filter(
+    (owner: any) => owner.status !== "closed"
+  );
+  const prioritizedBuyers = activeBuyerLeads
+    .map((buyer: any) => ({
+      buyer,
+      priority: getBuyerLeadPriority(buyer),
+      matches: getBuyerPropertyMatch(buyer, lands || []),
+    }))
+    .sort((a: any, b: any) => {
+      if (b.priority.score !== a.priority.score) {
+        return b.priority.score - a.priority.score;
+      }
+      return new Date(b.buyer.createdAt).getTime() -
+        new Date(a.buyer.createdAt).getTime();
+    })
+    .slice(0, 5);
+
   return (
     <>
     <style>{responsiveStyles}</style>
@@ -502,6 +989,205 @@ export default function AdminClient({
       </div>
     </div>
 
+
+      {canUseAI && (
+        <>
+      {/* PROP VEST AI LEAD PRIORITY PANEL */}
+      <section
+        aria-label="PropVest AI lead priority"
+        style={{
+          background: "#ffffff",
+          border: "1px solid #dbe3ef",
+          borderRadius: 16,
+          padding: 20,
+          marginBottom: 22,
+          boxShadow: "0 4px 14px rgba(15, 23, 42, 0.05)",
+          color: "#111827",
+        }}
+      >
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          gap: 12,
+          marginBottom: 16,
+        }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 22, color: "#172554" }}>
+              ✨ PropVest Lead Priority
+            </h2>
+            <p style={{ margin: "6px 0 0", color: "#64748b", fontSize: 13 }}>
+              Rule-based prioritisation and listing suggestions for your current enquiries.
+            </p>
+          </div>
+          <span style={{
+            borderRadius: 20,
+            background: "#eff6ff",
+            color: "#1d4ed8",
+            padding: "7px 11px",
+            fontSize: 12,
+            fontWeight: 700,
+          }}>
+            Preview · No auto-messaging
+          </span>
+        </div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))",
+          gap: 10,
+          marginBottom: 20,
+        }}>
+          {[
+            { label: "Open buyer leads", value: activeBuyerLeads.length, color: "#1d4ed8" },
+            { label: "Open seller leads", value: activeSellerLeads.length, color: "#15803d" },
+            { label: "New buyer leads", value: activeBuyerLeads.filter((buyer: any) => buyer.status === "new").length, color: "#b45309" },
+            { label: "Listings to match", value: Array.isArray(lands) ? lands.length : 0, color: "#6d28d9" },
+          ].map((item) => (
+            <div key={item.label} style={{
+              padding: 14,
+              border: "1px solid #e5e7eb",
+              borderRadius: 12,
+              background: "#f8fafc",
+            }}>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 7 }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: 27, fontWeight: 800, color: item.color }}>
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <h3 style={{ margin: "0 0 10px", fontSize: 17 }}>
+          Buyer follow-up queue
+        </h3>
+
+        {prioritizedBuyers.length === 0 ? (
+          <p style={{
+            margin: 0,
+            padding: 18,
+            borderRadius: 10,
+            background: "#f8fafc",
+            color: "#64748b",
+          }}>
+            No open buyer enquiries are currently available in this dashboard.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gap: 10 }}>
+            {prioritizedBuyers.map(({ buyer, priority, matches }: any) => (
+              <article key={buyer.id} style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 12,
+                padding: 14,
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) auto",
+                gap: 12,
+                alignItems: "start",
+              }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}>
+                    <strong style={{ fontSize: 15, overflowWrap: "anywhere" }}>
+                      {buyer.buyerName}
+                    </strong>
+                    <span style={{
+                      fontSize: 11,
+                      borderRadius: 20,
+                      padding: "4px 8px",
+                      background: buyer.status === "new" ? "#fff7ed" : "#f1f5f9",
+                      color: buyer.status === "new" ? "#9a3412" : "#475569",
+                      fontWeight: 700,
+                    }}>
+                      {buyer.status || "new"}
+                    </span>
+                  </div>
+
+                  <div style={{ marginTop: 7, color: "#475569", fontSize: 13 }}>
+                    📍 {buyer.city || "Location not specified"}
+                    {" · "}
+                    {buyer.propertyType || "Property type not specified"}
+                  </div>
+
+                  <div style={{ marginTop: 4, color: "#475569", fontSize: 13 }}>
+                    Budget: {buyer.budget || "Not provided"}
+                  </div>
+
+                  <div style={{
+                    marginTop: 9,
+                    fontSize: 12,
+                    lineHeight: 1.6,
+                    color: "#64748b",
+                  }}>
+                    {priority.reasons.join(" · ")}
+                  </div>
+
+                  {matches.length > 0 ? (
+                    <div style={{
+                      marginTop: 10,
+                      padding: 10,
+                      borderRadius: 9,
+                      background: "#f0fdf4",
+                      color: "#166534",
+                      fontSize: 12,
+                    }}>
+                      <strong>Suggested listing match · {matches[0].score}%</strong>
+                      <div style={{ marginTop: 3, overflowWrap: "anywhere" }}>
+                        {matches[0].land.title} — {formatPropertyPrice(matches[0].land.price)}
+                      </div>
+                      <div style={{ marginTop: 3, color: "#3f6212" }}>
+                        {matches[0].reasons.join(" · ")}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ marginTop: 9, fontSize: 12, color: "#64748b" }}>
+                      No strong listing match from the available details yet.
+                    </div>
+                  )}
+                </div>
+
+                <div style={{
+                  textAlign: "center",
+                  minWidth: 62,
+                  borderRadius: 10,
+                  background: priority.score >= 70 ? "#dcfce7" : priority.score >= 45 ? "#fef3c7" : "#f1f5f9",
+                  color: priority.score >= 70 ? "#166534" : priority.score >= 45 ? "#92400e" : "#334155",
+                  padding: "10px 8px",
+                }}>
+                  <div style={{ fontSize: 23, fontWeight: 800 }}>
+                    {priority.score}
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700 }}>PRIORITY</div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        <p style={{
+          margin: "14px 0 0",
+          color: "#64748b",
+          fontSize: 11,
+          lineHeight: 1.5,
+        }}>
+          Scores are preliminary rules, not conversion predictions or lending decisions.
+          Missing information lowers completeness, not a buyer's worth. Review details and
+          approve any outreach yourself. Listing matches use only the listings available to this account.
+        </p>
+      </section>
+        </>
+      )}
+
+
+      {canUseAI && (
+        <DiscoveredLeadReviewPanel />
+      )}
 
       {/* PLAN SUMMARY */}
 
