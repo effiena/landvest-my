@@ -307,7 +307,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
           .propvest-sales-grid {
             padding-left: 8px !important;
             padding-right: 8px !important;
-            grid-template-columns: minmax(0, 1fr) !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
         }
       `}</style>
