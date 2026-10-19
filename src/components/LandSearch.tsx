@@ -323,7 +323,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
             margin: 0 0 6px !important;
             display: -webkit-box !important;
             -webkit-box-orient: vertical !important;
-            -webkit-line-clamp: 2 !important;
+            -webkit-line-clamp: 3 !important;
             overflow: hidden !important;
             overflow-wrap: anywhere !important;
           }
