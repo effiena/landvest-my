@@ -308,6 +308,46 @@ export default function LandSearch({ lands }: { lands: any[] }) {
             padding-left: 8px !important;
             padding-right: 8px !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 10px !important;
+          }
+          .propvest-sales-grid > article {
+            min-width: 0 !important;
+          }
+          .propvest-sales-grid > article > div:last-child {
+            padding: 8px !important;
+            min-width: 0 !important;
+          }
+          .propvest-sales-grid h2 {
+            font-size: 14px !important;
+            line-height: 1.35 !important;
+            margin: 0 0 6px !important;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
+            overflow: hidden !important;
+            overflow-wrap: anywhere !important;
+          }
+          .propvest-sales-grid p {
+            font-size: 11px !important;
+            line-height: 1.4 !important;
+            margin: 4px 0 !important;
+            overflow-wrap: anywhere !important;
+          }
+          .propvest-sales-grid p:nth-of-type(3) {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            margin: 7px 0 !important;
+          }
+          .propvest-sales-grid a {
+            display: inline-flex !important;
+            width: auto !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 6px 9px !important;
+            margin-top: 5px !important;
+            font-size: 11px !important;
+            line-height: 1.3 !important;
+            white-space: nowrap !important;
           }
         }
       `}</style>
