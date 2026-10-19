@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ImageCarousel from "@/components/ImageCarousel";
-import { getWhatsAppLink } from "@/lib/whatsapp";
+import { getSafeWhatsAppLink } from "@/lib/whatsapp";
 
 function formatPropertyPrice(value: unknown) {
   if (value === null || value === undefined || value === "") {
@@ -492,7 +492,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               </p>
 
               <a
-                href={getWhatsAppLink(land.whatsapp)}
+                href={getSafeWhatsAppLink(land.whatsapp) || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -608,7 +608,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
                 </div>
 
                 <a
-                  href={getWhatsAppLink(selectedLand.whatsapp)}
+                  href={getSafeWhatsAppLink(selectedLand.whatsapp) || undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={styles.whatsapp}

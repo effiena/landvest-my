@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getWhatsAppLink } from "@/lib/whatsapp";
+import { getSafeWhatsAppLink } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +53,7 @@ export default async function ListingsPage() {
             <p style={{ marginTop: 8 }}>{land.description}</p>
 
             <a
-              href={getWhatsAppLink(land.whatsapp)}
+              href={getSafeWhatsAppLink(land.whatsapp) || undefined}
               target="_blank"
               style={{
                 display: "inline-block",

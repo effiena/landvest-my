@@ -35,3 +35,20 @@ export function getWhatsAppLink(
     phone
   )}`;
 }
+
+
+/**
+ * Return a WhatsApp URL only when the supplied Malaysian mobile number
+ * can be normalized. Invalid or missing database values must not crash SSR.
+ */
+export function getSafeWhatsAppLink(
+  phone: string | null | undefined
+): string | null {
+  if (!phone || typeof phone !== "string") return null;
+
+  try {
+    return getWhatsAppLink(phone);
+  } catch {
+    return null;
+  }
+}
