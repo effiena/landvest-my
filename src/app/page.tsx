@@ -6,6 +6,7 @@ import Link from "next/link";
 import LandSearch from "@/components/LandSearch";
 import SellPropertyButton from "@/components/SellPropertyButton";
 import HomeMembershipCTA from "@/components/HomeMembershipCTA";
+import FloatingWhatsAppContacts from "@/components/FloatingWhatsAppContacts";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +115,7 @@ export default async function Home() {
     <LandSearch lands={lands} />
 
           <HomeMembershipCTA />
+          <FloatingWhatsAppContacts />
     </main>
   );
 }
