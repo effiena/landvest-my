@@ -149,10 +149,9 @@ export default async function AdminDashboard() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 16,
-            padding: "20px 24px 0",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gap: 10,
+            padding: "14px 16px 0",
             maxWidth: 1400,
             margin: "0 auto",
           }}
@@ -161,16 +160,16 @@ export default async function AdminDashboard() {
             style={{
               background: "#ffffff",
               borderRadius: 14,
-              padding: 20,
+              padding: 12,
               boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
               border: "1px solid #e5e7eb",
             }}
           >
             <div
               style={{
-                fontSize: 14,
+                fontSize: 12,
                 color: "#666",
-                marginBottom: 8,
+                marginBottom: 4,
               }}
             >
               👁️ Total Visitors
@@ -178,7 +177,7 @@ export default async function AdminDashboard() {
 
             <div
               style={{
-                fontSize: 30,
+                fontSize: 24,
                 fontWeight: 700,
                 color: "#111",
               }}
@@ -191,16 +190,16 @@ export default async function AdminDashboard() {
             style={{
               background: "#ffffff",
               borderRadius: 14,
-              padding: 20,
+              padding: 12,
               boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
               border: "1px solid #e5e7eb",
             }}
           >
             <div
               style={{
-                fontSize: 14,
+                fontSize: 12,
                 color: "#666",
-                marginBottom: 8,
+                marginBottom: 4,
               }}
             >
               📅 Today
@@ -208,7 +207,7 @@ export default async function AdminDashboard() {
 
             <div
               style={{
-                fontSize: 30,
+                fontSize: 24,
                 fontWeight: 700,
                 color: "#111",
               }}
@@ -221,16 +220,16 @@ export default async function AdminDashboard() {
             style={{
               background: "#ffffff",
               borderRadius: 14,
-              padding: 20,
+              padding: 12,
               boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
               border: "1px solid #e5e7eb",
             }}
           >
             <div
               style={{
-                fontSize: 14,
+                fontSize: 12,
                 color: "#666",
-                marginBottom: 8,
+                marginBottom: 4,
               }}
             >
               📊 This Month
@@ -238,7 +237,7 @@ export default async function AdminDashboard() {
 
             <div
               style={{
-                fontSize: 30,
+                fontSize: 24,
                 fontWeight: 700,
                 color: "#111",
               }}
