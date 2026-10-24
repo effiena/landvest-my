@@ -74,11 +74,11 @@ export async function requireYooriAI(): Promise<YooriAIAuthResult> {
     };
   }
 
-  if (agent.name.trim().toLowerCase() !== "yoori") {
+  if (!["yoori", "della"].includes(agent.name.trim().toLowerCase())) {
     return {
       authorized: false,
       response: NextResponse.json(
-        { error: "This AI feature is restricted to Yoori." },
+        { error: "This AI feature is restricted to authorized agents." },
         { status: 403 }
       ),
     };

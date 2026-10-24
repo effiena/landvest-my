@@ -254,7 +254,7 @@ export default async function AdminDashboard() {
         wantToBuy={agent.wantToBuy}
         wantToSell={wantToSell}
         contactMessages={contactMessages}
-    canUseAI={agentName === "yoori"}
+    canUseAI={["yoori", "della"].includes(agentName.trim().toLowerCase())}
       />
     </div>
   );
