@@ -191,6 +191,10 @@ function DiscoveredLeadReviewPanel() {
   const [leadError, setLeadError] = useState("");
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [busyLeadId, setBusyLeadId] = useState<number | null>(null);
+  const [discovering, setDiscovering] = useState(false);
+  const [discoveryMessage, setDiscoveryMessage] = useState("");
+  const [previewCandidates, setPreviewCandidates] = useState<any[]>([]);
+
 
   const loadLeads = async () => {
     setLoadingLeads(true);
@@ -227,6 +231,34 @@ function DiscoveredLeadReviewPanel() {
   useEffect(() => {
     void loadLeads();
   }, [status]);
+
+  const discoverLeads = async () => {
+    setDiscovering(true);
+    setDiscoveryMessage("");
+    setLeadError("");
+    setPreviewCandidates([]);
+
+    try {
+      const response = await fetch("/api/ai-leads/discover", {
+        method: "POST",
+        cache: "no-store",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Discovery preview failed.");
+      }
+
+      setPreviewCandidates(Array.isArray(data.candidates) ? data.candidates : []);
+      setDiscoveryMessage(
+        `${data.message || "Preview completed."} Searches completed: ${data.searchesCompleted ?? 0}. Saved: ${data.saved ?? 0}.`
+      );
+    } catch (error: any) {
+      setLeadError(error?.message || "Unable to run discovery preview.");
+    } finally {
+      setDiscovering(false);
+    }
+  };
 
   const reviewLead = async (
     id: number,
@@ -284,9 +316,25 @@ function DiscoveredLeadReviewPanel() {
             🔎 AI Lead Discovery &amp; Review
           </h2>
           <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
-            Review saved public-source candidates. No messages are sent automatically.
+            Preview public-source buyer-intent candidates without saving. Saved candidates remain available below; no messages are sent automatically.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => void discoverLeads()}
+          disabled={discovering || loadingLeads}
+          style={{
+            border: 0,
+            borderRadius: 9,
+            padding: "9px 12px",
+            background: discovering || loadingLeads ? "#cbd5e1" : "#064e3b",
+            color: "#ffffff",
+            fontWeight: 700,
+            cursor: discovering || loadingLeads ? "wait" : "pointer",
+          }}
+        >
+          {discovering ? "Previewing…" : "Preview Leads (No Save)"}
+        </button>
         <button
           type="button"
           onClick={() => void loadLeads()}
@@ -334,6 +382,95 @@ function DiscoveredLeadReviewPanel() {
           {leads.length} candidate{leads.length === 1 ? "" : "s"}
         </span>
       </div>
+
+      {discoveryMessage && (
+        <div role="status" style={{
+          background: "#ecfdf5",
+          color: "#065f46",
+          border: "1px solid #a7f3d0",
+          borderRadius: 9,
+          padding: 12,
+          marginBottom: 12,
+          fontSize: 13,
+          lineHeight: 1.5,
+        }}>
+          {discoveryMessage}
+        </div>
+      )}
+
+      {previewCandidates.length > 0 && (
+        <section
+          aria-label="Unsaved lead preview"
+          style={{
+            border: "1px solid #f59e0b",
+            background: "#fffbeb",
+            borderRadius: 12,
+            padding: 14,
+            marginBottom: 14,
+          }}
+        >
+          <h3 style={{ margin: "0 0 6px", color: "#92400e", fontSize: 16 }}>
+            Preview results — not saved
+          </h3>
+          <p style={{ margin: "0 0 12px", color: "#92400e", fontSize: 12, lineHeight: 1.5 }}>
+            Search relevance is not proof of a genuine buyer. Open each original source and verify the requirement. These results have not been saved or contacted.
+          </p>
+          <div style={{ display: "grid", gap: 10 }}>
+            {previewCandidates.map((candidate, index) => (
+              <article
+                key={`${candidate.url}-${index}`}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #fde68a",
+                  borderRadius: 9,
+                  padding: 12,
+                  overflowWrap: "anywhere",
+                }}
+              >
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 8,
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                }}>
+                  <strong style={{ flex: "1 1 220px", color: "#111827" }}>
+                    {candidate.title}
+                  </strong>
+                  <span style={{
+                    background: "#fef3c7",
+                    color: "#92400e",
+                    borderRadius: 7,
+                    padding: "5px 8px",
+                    fontSize: 12,
+                    fontWeight: 800,
+                  }}>
+                    Score: {candidate.score}/100
+                  </span>
+                </div>
+                <div style={{ marginTop: 5, color: "#475569", fontSize: 12 }}>
+                  {candidate.city || "Location unspecified"} · {candidate.propertyType || "Property type unspecified"}
+                  {candidate.requiredSize ? ` · ${candidate.requiredSize}` : ""}
+                </div>
+                <p style={{ margin: "8px 0", color: "#334155", fontSize: 13, lineHeight: 1.6 }}>
+                  {candidate.excerpt}
+                </p>
+                <div style={{ marginBottom: 8, color: "#475569", fontSize: 12 }}>
+                  Match signals: {(candidate.reasons || []).join("; ")}
+                </div>
+                <a
+                  href={candidate.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#1d4ed8", fontSize: 13 }}
+                >
+                  Open original source ↗
+                </a>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
       {leadError && (
         <div role="alert" style={{
@@ -504,6 +641,7 @@ export default function AdminClient({
 }: any) {
 
   const router = useRouter();
+  const [showMobileAIReview, setShowMobileAIReview] = useState(false);
   const [visibleWantToBuy, setVisibleWantToBuy] = useState(wantToBuy);
   const [visibleWantToSell, setVisibleWantToSell] = useState(wantToSell);
   const [visibleContactMessages, setVisibleContactMessages] =
@@ -918,6 +1056,337 @@ export default function AdminClient({
         text-align: center !important;
       }
     }
+
+    .propvest-inquiry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 14px;
+      width: 100%;
+      margin: 0 0 24px;
+    }
+
+    .propvest-inquiry-tile {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      min-width: 0;
+      width: 100%;
+      margin: 0 0 24px;
+    }
+
+    .propvest-inquiry-tile button {
+      width: 100% !important;
+      max-width: none !important;
+      min-height: 76px;
+      padding: 14px 12px !important;
+      border-radius: 14px !important;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 700px) {
+      .propvest-inquiry-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .propvest-inquiry-tile button {
+        min-height: 60px;
+        font-size: 15px !important;
+      }
+    }
+
+    .propvest-inquiry-summary-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      width: 100%;
+      margin: 0 0 22px;
+      align-items: stretch;
+    }
+
+    .propvest-inquiry-summary-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-width: 0;
+      min-height: 72px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-align: left;
+      overflow-wrap: anywhere;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+    }
+
+    .propvest-inquiry-summary-button.buyer {
+      border: 1px solid #BFDBFE;
+      background: #EFF6FF;
+      color: #1E3A8A;
+    }
+
+    .propvest-inquiry-summary-button.owner {
+      border: 1px solid #BBF7D0;
+      background: #F0FDF4;
+      color: #166534;
+    }
+
+    .propvest-inquiry-summary-button.contact {
+      border: 1px solid #C7D2FE;
+      background: #EEF2FF;
+      color: #0B2A5B;
+    }
+
+    .propvest-inquiry-count {
+      flex: 0 0 auto;
+      min-width: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: #FFFFFF;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .buyer-count { background: #2563EB; }
+    .owner-count { background: #16A34A; }
+    .contact-count { background: #3730A3; }
+
+    .propvest-inquiry-hidden-button {
+      margin-bottom: 0 !important;
+    }
+
+    .propvest-inquiry-hidden-button > button {
+      display: none !important;
+    }
+
+    @media (max-width: 700px) {
+      .propvest-inquiry-summary-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .propvest-inquiry-summary-button {
+        min-height: 58px;
+        font-size: 15px;
+      }
+    }
+
+    /* PropVest admin visual refresh */
+    .propvest-admin-topbar {
+      background: linear-gradient(135deg, #0B1F3A 0%, #123B52 100%) !important;
+      color: #ffffff;
+      padding: clamp(18px, 3vw, 28px) !important;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 18px !important;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+      margin: 20px auto 24px !important;
+      max-width: 1400px;
+      gap: 18px;
+    }
+
+    .propvest-admin-topbar h1 {
+      color: #ffffff !important;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .propvest-admin-topbar p {
+      color: #D7E4ED !important;
+      line-height: 1.5;
+    }
+
+    .propvest-admin-header-right {
+      gap: 12px !important;
+      flex-wrap: wrap;
+    }
+
+    .propvest-admin-header-right > div:first-child {
+      gap: 8px !important;
+      flex-wrap: wrap;
+    }
+
+    .propvest-admin-nav-buttons {
+      gap: 8px !important;
+      flex-wrap: wrap;
+    }
+
+    .propvest-admin-nav-buttons a,
+    .propvest-admin-nav-buttons button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      border-radius: 10px !important;
+      transition: filter 0.15s ease, transform 0.15s ease;
+    }
+
+    .propvest-admin-nav-buttons a:hover,
+    .propvest-admin-nav-buttons button:hover {
+      filter: brightness(1.08);
+    }
+
+    .propvest-admin-grid {
+      grid-template-columns: minmax(260px, 0.85fr) minmax(0, 1.6fr);
+      gap: 22px;
+    }
+
+    .propvest-admin-listings {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    @media (max-width: 768px) {
+      .propvest-admin-topbar {
+        margin: 12px 0 18px !important;
+      }
+
+      .propvest-admin-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 16px !important;
+      }
+
+      .propvest-admin-listings {
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)) !important;
+        gap: 12px !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .propvest-admin-topbar {
+        padding: 16px !important;
+        border-radius: 14px !important;
+      }
+
+      .propvest-admin-header-right {
+        align-items: stretch;
+      }
+
+      .propvest-admin-header-right > div:first-child {
+        width: 100%;
+      }
+
+      .propvest-admin-nav-buttons {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .propvest-admin-listings {
+        grid-template-columns: minmax(0, 1fr) !important;
+      }
+    }
+
+
+    /* Final mobile override: keep admin listing cards in two columns */
+    @media (max-width: 768px) {
+      .propvest-admin-listings {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        min-width: 0;
+      }
+
+      .propvest-admin-listings > * {
+        min-width: 0;
+      }
+    }
+
+
+    .propvest-ai-mobile-open,
+    .propvest-ai-mobile-overlay {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .propvest-ai-inline-panel {
+        display: none !important;
+      }
+
+      .propvest-ai-mobile-open {
+        display: block;
+        width: 100%;
+        margin: 0 0 18px;
+        padding: 14px 16px;
+        border: 1px solid #047857;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0f172a, #064e3b);
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 750;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .propvest-ai-mobile-overlay {
+        display: flex;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        padding: 10px;
+        background: rgba(2, 6, 23, 0.78);
+        align-items: stretch;
+        justify-content: center;
+      }
+
+      .propvest-ai-mobile-dialog {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 760px;
+        max-height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: #f8fafc;
+        border-radius: 14px;
+        padding: 10px;
+      }
+
+      .propvest-ai-mobile-dialog-header {
+        position: sticky;
+        top: -10px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px;
+        margin: -10px -10px 12px;
+        background: #0f172a;
+        color: #ffffff;
+        border-radius: 12px 12px 0 0;
+      }
+
+      .propvest-ai-mobile-dialog-header button {
+        flex-shrink: 0;
+        padding: 8px 10px;
+        border: 1px solid #64748b;
+        border-radius: 8px;
+        background: #ffffff;
+        color: #0f172a;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .propvest-ai-mobile-dialog section[aria-label="AI Lead Discovery and Review"] {
+        padding: 12px !important;
+        margin-bottom: 0 !important;
+      }
+
+      .propvest-admin-listings {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        min-width: 0;
+      }
+
+      .propvest-admin-listings > * {
+        min-width: 0;
+      }
+    }
+
   `;
 
   const activeBuyerLeads = visibleWantToBuy.filter(
@@ -1186,7 +1655,42 @@ export default function AdminClient({
 
 
       {canUseAI && (
-        <DiscoveredLeadReviewPanel />
+        <>
+          <div className="propvest-ai-inline-panel">
+            <DiscoveredLeadReviewPanel />
+          </div>
+
+          <button
+            type="button"
+            className="propvest-ai-mobile-open"
+            onClick={() => setShowMobileAIReview(true)}
+          >
+            🔎 AI Lead Discovery &amp; Review
+          </button>
+
+          {showMobileAIReview && (
+            <div
+              className="propvest-ai-mobile-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-label="AI Lead Discovery and Review"
+            >
+              <div className="propvest-ai-mobile-dialog">
+                <div className="propvest-ai-mobile-dialog-header">
+                  <strong>🔎 AI Lead Discovery &amp; Review</strong>
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileAIReview(false)}
+                    aria-label="Close AI Lead Discovery and Review"
+                  >
+                    Close ✕
+                  </button>
+                </div>
+                <DiscoveredLeadReviewPanel />
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* PLAN SUMMARY */}
@@ -1317,6 +1821,51 @@ export default function AdminClient({
       {(agent?.name?.trim().toLowerCase() === "yoori" ||
         agent?.name?.trim().toLowerCase() === "della") && (
         <>
+          {/* INQUIRY SUMMARY ROW */}
+          <div className="propvest-inquiry-summary-row">
+            <button
+              type="button"
+              className="propvest-inquiry-summary-button buyer"
+              onClick={() => {
+                const el = document.getElementById("buyer-inquiries-window");
+                if (el) el.style.display = "flex";
+              }}
+            >
+              <span>🛒 Buyer Inquiries</span>
+              <span className="propvest-inquiry-count buyer-count">
+                {visibleWantToBuy.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="propvest-inquiry-summary-button owner"
+              onClick={() => {
+                const el = document.getElementById("owner-inquiries-window");
+                if (el) el.style.display = "flex";
+              }}
+            >
+              <span>🏡 Owner Inquiries</span>
+              <span className="propvest-inquiry-count owner-count">
+                {visibleWantToSell.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              className="propvest-inquiry-summary-button contact"
+              onClick={() => {
+                const el = document.getElementById("contact-developer-window");
+                if (el) el.style.display = "flex";
+              }}
+            >
+              <span>📩 Contact Developer Messages</span>
+              <span className="propvest-inquiry-count contact-count">
+                {visibleContactMessages.length}
+              </span>
+            </button>
+          </div>
+
           {/* BUYER INQUIRIES BUTTON + POPUP */}
           <div
             style={{
@@ -1324,13 +1873,7 @@ export default function AdminClient({
               width: "100%",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                width: "100%",
-              }}
-            >
+            <div className="propvest-inquiry-tile propvest-inquiry-hidden-button">
               <button
               type="button"
               onClick={() => {
@@ -1619,13 +2162,7 @@ export default function AdminClient({
               width: "100%",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                width: "100%",
-              }}
-            >
+            <div className="propvest-inquiry-tile propvest-inquiry-hidden-button">
               <button
               type="button"
               onClick={() => {
@@ -2049,13 +2586,7 @@ export default function AdminClient({
       {/* CONTACT DEVELOPER MESSAGES */}
       {(agent?.name?.trim().toLowerCase() === "yoori" ||
         agent?.name?.trim().toLowerCase() === "della") && (
-        <div
-          style={{
-            marginBottom: 28,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
+        <div className="propvest-inquiry-tile propvest-inquiry-hidden-button">
           <button
             type="button"
             onClick={() => {
@@ -2650,7 +3181,7 @@ const styles: any = {
   },
 
   wtbCount: {
-    background: "#1E3A8A",
+    background: "#0B1F3A",
     color: "#fff",
     padding: "6px 12px",
     borderRadius: 20,
@@ -2660,7 +3191,7 @@ const styles: any = {
 
   wtbEmpty: {
     padding: 20,
-    background: "#f4f6fb",
+    background: "#F8FAFC",
     borderRadius: 8,
     color: "#1E293B",
   },
@@ -2784,7 +3315,7 @@ const styles: any = {
 
   page: {
     padding: 25,
-    background: "#f4f6fb",
+    background: "#F8FAFC",
     minHeight: "100vh",
     fontFamily: "Arial",
   },
@@ -2810,7 +3341,7 @@ const styles: any = {
 
   homeBtn: {
     padding: "8px 14px",
-    background: "#1E3A8A",
+    background: "#0B1F3A",
     color: "#fff",
     borderRadius: 7,
     textDecoration: "none",
@@ -2844,7 +3375,7 @@ const styles: any = {
   badgeBox: { display: "flex", gap: 10 },
 
   badge: {
-    background: "#111",
+    background: "#0B1F3A",
     color: "#fff",
     padding: "6px 12px",
     borderRadius: 20,
@@ -2852,7 +3383,7 @@ const styles: any = {
   },
 
   badgeExtra: {
-    background: "#0F766E",
+    background: "#059669",
     color: "#fff",
     padding: "6px 12px",
     borderRadius: 20,
@@ -2861,7 +3392,8 @@ const styles: any = {
   },
 
   badgeYellow: {
-    background: "#FACC15",
+    background: "#D1FAE5",
+    color: "#065F46",
     padding: "6px 12px",
     borderRadius: 20,
     fontSize: 12,
@@ -2889,7 +3421,7 @@ const styles: any = {
 
   cardTitle: {
     marginBottom: 10,
-    color: "#000000",
+    color: "#0F172A",
   },
 
   form: { display: "flex", flexDirection: "column", gap: 8 },
@@ -2897,25 +3429,25 @@ const styles: any = {
   input: {
     padding: 10,
     borderRadius: 6,
-    border: "1px solid #ddd",
+    border: "1px solid #CBD5E1",
     background: "#ffffff",
-    color: "#000000",
+    color: "#0F172A",
     WebkitTextFillColor: "#000000",
   },
 
   textarea: {
     padding: 10,
     borderRadius: 6,
-    border: "1px solid #ddd",
+    border: "1px solid #CBD5E1",
     minHeight: 80,
     background: "#ffffff",
-    color: "#000000",
+    color: "#0F172A",
     WebkitTextFillColor: "#000000",
   },
 
   primaryBtn: {
     padding: 10,
-    background: "#111",
+    background: "#0B1F3A",
     color: "#fff",
     borderRadius: 6,
     border: "none",
@@ -2924,7 +3456,7 @@ const styles: any = {
 
   secondaryBtn: {
     padding: 10,
-    background: "#eee",
+    background: "#F1F5F9",
     borderRadius: 6,
     border: "none",
   },
@@ -2961,7 +3493,7 @@ const styles: any = {
 
   title: {
     margin: "10px 0 5px",
-    color: "#000000",
+    color: "#0F172A",
     fontSize: 18,
     fontWeight: 700,
     lineHeight: 1.3,
@@ -2970,7 +3502,7 @@ const styles: any = {
 
   text: {
     fontSize: 13,
-    color: "#000000",
+    color: "#0F172A",
     lineHeight: 1.5,
     overflowWrap: "anywhere",
   },
@@ -2978,7 +3510,7 @@ const styles: any = {
   price: {
     fontWeight: "bold",
     marginTop: 5,
-    color: "#1E3A8A",
+    color: "#047857",
     fontSize: 16,
   },
 
@@ -2990,7 +3522,8 @@ const styles: any = {
 
   editBtn: {
     padding: "6px 10px",
-    background: "#FACC15",
+    background: "#059669",
+    color: "#ffffff",
     border: "none",
     borderRadius: 6,
     cursor: "pointer",
@@ -3005,22 +3538,22 @@ const styles: any = {
   areaInput: {
     flex: 1,
     padding: 12,
-    border: "1px solid #ddd",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     fontSize: 14,
     background: "#ffffff",
-    color: "#000000",
+    color: "#0F172A",
     WebkitTextFillColor: "#000000",
   },
 
   areaSelect: {
     width: 170,
     padding: 12,
-    border: "1px solid #ddd",
+    border: "1px solid #CBD5E1",
     borderRadius: 8,
     fontSize: 14,
     background: "#ffffff",
-    color: "#000000",
+    color: "#0F172A",
   },
 
   hiddenFileInput: {
@@ -3045,7 +3578,7 @@ const styles: any = {
   chooseFileBtn: {
     display: "inline-block",
     padding: "10px 16px",
-    background: "#111",
+    background: "#0B1F3A",
     color: "#fff",
     borderRadius: 6,
     cursor: "pointer",
