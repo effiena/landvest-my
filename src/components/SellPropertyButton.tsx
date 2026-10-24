@@ -28,7 +28,7 @@ const styles: any = {
   button: {
     padding: "10px 16px",
     background: "#D6B779",
-    color: "#102C27",
+    color: "#101D3A",
     border: "none",
     borderRadius: 8,
     textDecoration: "none",

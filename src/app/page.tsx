@@ -139,7 +139,7 @@ hero: {
   title: {
     fontSize: 42,
     fontWeight: 800,
-    color: "#102C27",
+    color: "#101D3A",
   },
 
   subtitle: {
@@ -167,7 +167,7 @@ hero: {
 
   btnWantToBuy: {
     padding: "10px 16px",
-    background: "#1E5948",
+    background: "#145A43",
     color: "#FFFFFF",
     borderRadius: 8,
     textDecoration: "none",
@@ -176,7 +176,7 @@ hero: {
 
   btnDark: {
     padding: "10px 16px",
-    background: "#102C27",
+    background: "#101D3A",
     color: "#fff",
     borderRadius: 8,
     textDecoration: "none",
@@ -185,7 +185,7 @@ hero: {
   btnYellow: {
     padding: "10px 16px",
     background: "#D6B779",
-    color: "#102C27",
+    color: "#101D3A",
     borderRadius: 8,
     textDecoration: "none",
     fontWeight: "bold",
@@ -193,7 +193,7 @@ hero: {
 
   btnBlue: {
     padding: "10px 16px",
-    background: "#1E5948",
+    background: "#145A43",
     color: "#fff",
     borderRadius: 8,
     textDecoration: "none",
@@ -248,7 +248,7 @@ hero: {
     marginTop: 10,
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1E5948",
+    color: "#145A43",
   },
 
   desc: {
@@ -264,7 +264,7 @@ hero: {
   whatsapp: {
     display: "inline-block",
     marginTop: 14,
-    background: "#102C27",
+    background: "#101D3A",
     color: "#D6B779",
     padding: "10px 14px",
     borderRadius: 8,
@@ -285,7 +285,7 @@ heroTitle: {
   lineHeight: 1.1,
   letterSpacing: "-1.5px",
   textAlign: "center",
-  color: "#102C27",
+  color: "#101D3A",
 },
 
 formerBrand: {

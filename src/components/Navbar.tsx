@@ -99,7 +99,7 @@ const styles: any = {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "14px 24px",
-    background: "#102C27",
+    background: "#101D3A",
     position: "sticky",
     top: 0,
     zIndex: 1000,
@@ -131,7 +131,7 @@ const styles: any = {
 
   menuButton: {
     display: "none",
-    background: "#1E5948",
+    background: "#145A43",
     color: "#FFFFFF",
     border: "none",
     borderRadius: 8,
@@ -144,7 +144,7 @@ const styles: any = {
   },
 
   wtbBtn: {
-    background: "#1E5948",
+    background: "#145A43",
     color: "#FFFFFF",
     padding: "9px 13px",
     borderRadius: 7,

@@ -25,7 +25,7 @@ export default function FloatingWhatsAppContacts() {
           box-sizing: border-box;
           padding: 16px;
           color: #F7F5EF;
-          background: linear-gradient(145deg, rgba(16,44,39,.98), rgba(10,31,27,.99));
+          background: linear-gradient(145deg, rgba(16,29,58,.98), rgba(8,17,37,.99));
           border: 1px solid rgba(214,183,121,.42);
           border-radius: 16px;
           box-shadow: 0 12px 40px rgba(2,8,23,.32), 0 0 22px rgba(214,183,121,.10);
@@ -111,7 +111,7 @@ export default function FloatingWhatsAppContacts() {
           flex: 0 0 32px;
           border-radius: 10px;
           border: 1px solid rgba(214,183,121,.35);
-          background: linear-gradient(145deg, #1E5948, #102C27);
+          background: linear-gradient(145deg, #145A43, #101D3A);
           color: #D6B779;
           font-size: 13px;
           font-weight: 800;

@@ -681,7 +681,7 @@ const styles: any = {
     justifyContent: "center",
     gap: 6,
     background: "#FFFFFF",
-    color: "#1E5948",
+    color: "#176B87",
     border: "1px solid #E2E8F0",
     borderRadius: 12,
     boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
@@ -692,9 +692,9 @@ const styles: any = {
   },
 
   categoryQuickButtonActive: {
-    background: "#1E5948",
+    background: "#145A43",
     color: "#FFFFFF",
-    border: "1px solid #1E5948",
+    border: "1px solid #145A43",
     boxShadow: "0 4px 12px rgba(30,89,72,0.2)",
   },
 
@@ -747,7 +747,7 @@ const styles: any = {
       "1px solid #E2E8F0",
     borderRadius: 8,
     background: "#F7F5EF",
-    color: "#102C27",
+    color: "#101D3A",
     fontSize: 14,
     cursor: "pointer",
   },
@@ -756,7 +756,7 @@ const styles: any = {
     height: 44,
     padding: "0 16px",
     background: "#E2E8F0",
-    color: "#102C27",
+    color: "#101D3A",
     border: "none",
     borderRadius: 8,
     fontWeight: "bold",
@@ -802,7 +802,7 @@ const styles: any = {
     maxHeight: "calc(100vh - 24px)",
     overflowY: "auto",
     background: "#FFFFFF",
-    color: "#102C27",
+    color: "#101D3A",
     borderRadius: 16,
     boxShadow: "0 24px 70px rgba(0, 0, 0, 0.3)",
   },
@@ -824,7 +824,7 @@ const styles: any = {
     margin: 0,
     fontSize: 22,
     lineHeight: 1.35,
-    color: "#102C27",
+    color: "#101D3A",
     overflowWrap: "anywhere",
   },
 
@@ -835,7 +835,7 @@ const styles: any = {
     border: "none",
     borderRadius: 10,
     background: "#E2E8F0",
-    color: "#102C27",
+    color: "#101D3A",
     fontSize: 30,
     lineHeight: 1,
     cursor: "pointer",
@@ -864,7 +864,7 @@ const styles: any = {
     fontSize: 26,
     lineHeight: 1.3,
     fontWeight: 800,
-    color: "#1E5948",
+    color: "#145A43",
   },
 
   detailText: {
@@ -885,7 +885,7 @@ const styles: any = {
 
   detailSectionTitle: {
     margin: "0 0 8px",
-    color: "#102C27",
+    color: "#101D3A",
     fontSize: 18,
   },
 
@@ -909,7 +909,7 @@ const styles: any = {
     marginTop: 10,
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1E5948",
+    color: "#145A43",
   },
 
   desc: {
@@ -926,7 +926,7 @@ const styles: any = {
   whatsapp: {
     display: "inline-block",
     marginTop: 14,
-    background: "#102C27",
+    background: "#101D3A",
     color: "#D6B779",
     padding: "10px 14px",
     borderRadius: 8,
@@ -947,7 +947,7 @@ const styles: any = {
   emptyButton: {
     marginTop: 10,
     padding: "10px 16px",
-    background: "#1E5948",
+    background: "#145A43",
     color: "#FFFFFF",
     border: "none",
     borderRadius: 8,
