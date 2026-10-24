@@ -124,7 +124,7 @@ export default async function Home() {
 
 const styles: any = {
   page: {
-    background: "#F4F7FB",
+    background: "#F7F5EF",
     minHeight: "100vh",
   },
 
@@ -139,7 +139,7 @@ hero: {
   title: {
     fontSize: 42,
     fontWeight: 800,
-    color: "#0F172A",
+    color: "#102C27",
   },
 
   subtitle: {
@@ -167,7 +167,7 @@ hero: {
 
   btnWantToBuy: {
     padding: "10px 16px",
-    background: "#1E3A8A",
+    background: "#1E5948",
     color: "#FFFFFF",
     borderRadius: 8,
     textDecoration: "none",
@@ -176,7 +176,7 @@ hero: {
 
   btnDark: {
     padding: "10px 16px",
-    background: "#0F172A",
+    background: "#102C27",
     color: "#fff",
     borderRadius: 8,
     textDecoration: "none",
@@ -184,8 +184,8 @@ hero: {
 
   btnYellow: {
     padding: "10px 16px",
-    background: "#FACC15",
-    color: "#0F172A",
+    background: "#D6B779",
+    color: "#102C27",
     borderRadius: 8,
     textDecoration: "none",
     fontWeight: "bold",
@@ -193,7 +193,7 @@ hero: {
 
   btnBlue: {
     padding: "10px 16px",
-    background: "#1E3A8A",
+    background: "#1E5948",
     color: "#fff",
     borderRadius: 8,
     textDecoration: "none",
@@ -248,7 +248,7 @@ hero: {
     marginTop: 10,
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1E3A8A",
+    color: "#1E5948",
   },
 
   desc: {
@@ -264,8 +264,8 @@ hero: {
   whatsapp: {
     display: "inline-block",
     marginTop: 14,
-    background: "#0F172A",
-    color: "#FACC15",
+    background: "#102C27",
+    color: "#D6B779",
     padding: "10px 14px",
     borderRadius: 8,
     textDecoration: "none",
@@ -285,7 +285,7 @@ heroTitle: {
   lineHeight: 1.1,
   letterSpacing: "-1.5px",
   textAlign: "center",
-  color: "#0B2A5B",
+  color: "#102C27",
 },
 
 formerBrand: {

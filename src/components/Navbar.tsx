@@ -99,7 +99,7 @@ const styles: any = {
     justifyContent: "space-between",
     alignItems: "center",
     padding: "14px 24px",
-    background: "#F4F7FB",
+    background: "#102C27",
     position: "sticky",
     top: 0,
     zIndex: 1000,
@@ -110,9 +110,9 @@ const styles: any = {
   logoButton: {
     padding: "8px 16px",
     borderRadius: 12,
-    background: "rgba(255,255,255,0.7)",
-    border: "1px solid #CBD5E1",
-    color: "#0F172A",
+    background: "rgba(247,245,239,0.10)",
+    border: "1px solid rgba(214,183,121,0.55)",
+    color: "#F7F5EF",
     fontWeight: 800,
     fontSize: 20,
     textDecoration: "none",
@@ -131,7 +131,7 @@ const styles: any = {
 
   menuButton: {
     display: "none",
-    background: "#1E3A8A",
+    background: "#1E5948",
     color: "#FFFFFF",
     border: "none",
     borderRadius: 8,
@@ -144,7 +144,7 @@ const styles: any = {
   },
 
   wtbBtn: {
-    background: "#1E3A8A",
+    background: "#1E5948",
     color: "#FFFFFF",
     padding: "9px 13px",
     borderRadius: 7,
@@ -154,7 +154,7 @@ const styles: any = {
   },
 
   memberBtn: {
-    background: "#16A34A",
+    background: "#D6B779",
     color: "#FFFFFF",
     padding: "9px 13px",
     borderRadius: 7,
@@ -164,7 +164,7 @@ const styles: any = {
   },
 
   btn: {
-    background: "#FACC15",
+    background: "#F7F5EF",
     color: "#0F172A",
     padding: "9px 15px",
     borderRadius: 7,
@@ -175,7 +175,7 @@ const styles: any = {
   },
 
   logout: {
-    background: "#FACC15",
+    background: "#F7F5EF",
     border: "none",
     color: "#0F172A",
     padding: "9px 15px",
@@ -219,7 +219,7 @@ if (typeof document !== "undefined") {
             gap: 10px;
             padding: 14px;
             background: #FFFFFF;
-            border: 1px solid #E2E8F0;
+            border: 1px solid rgba(214,183,121,.35);
             border-radius: 14px;
             box-shadow: 0 12px 30px rgba(0,0,0,0.12);
           }

@@ -13,7 +13,7 @@ export default function HomeMembershipCTA() {
     >
       <div
         style={{
-          background: "#0B2A5B",
+          background: "#102C27",
           borderRadius: 16,
           padding: "32px 24px",
           textAlign: "center",
@@ -57,7 +57,7 @@ export default function HomeMembershipCTA() {
             style={{
               display: "inline-block",
               padding: "13px 22px",
-              background: "#FACC15",
+              background: "#D6B779",
               color: "#0F172A",
               borderRadius: 9,
               textDecoration: "none",
@@ -73,7 +73,7 @@ export default function HomeMembershipCTA() {
               display: "inline-block",
               padding: "13px 22px",
               background: "#FFFFFF",
-              color: "#0B2A5B",
+              color: "#102C27",
               borderRadius: 9,
               textDecoration: "none",
               fontWeight: 700,

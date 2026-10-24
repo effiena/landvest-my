@@ -681,7 +681,7 @@ const styles: any = {
     justifyContent: "center",
     gap: 6,
     background: "#FFFFFF",
-    color: "#1E3A8A",
+    color: "#1E5948",
     border: "1px solid #E2E8F0",
     borderRadius: 12,
     boxShadow: "0 3px 10px rgba(0,0,0,0.05)",
@@ -692,10 +692,10 @@ const styles: any = {
   },
 
   categoryQuickButtonActive: {
-    background: "#1E3A8A",
+    background: "#1E5948",
     color: "#FFFFFF",
-    border: "1px solid #1E3A8A",
-    boxShadow: "0 4px 12px rgba(30,58,138,0.2)",
+    border: "1px solid #1E5948",
+    boxShadow: "0 4px 12px rgba(30,89,72,0.2)",
   },
 
   filterSection: {
@@ -716,7 +716,7 @@ const styles: any = {
     minWidth: 240,
     display: "flex",
     alignItems: "center",
-    background: "#F4F7FB",
+    background: "#F7F5EF",
     border:
       "1px solid #E2E8F0",
     borderRadius: 8,
@@ -746,8 +746,8 @@ const styles: any = {
     border:
       "1px solid #E2E8F0",
     borderRadius: 8,
-    background: "#F4F7FB",
-    color: "#0F172A",
+    background: "#F7F5EF",
+    color: "#102C27",
     fontSize: 14,
     cursor: "pointer",
   },
@@ -756,7 +756,7 @@ const styles: any = {
     height: 44,
     padding: "0 16px",
     background: "#E2E8F0",
-    color: "#0F172A",
+    color: "#102C27",
     border: "none",
     borderRadius: 8,
     fontWeight: "bold",
@@ -793,7 +793,7 @@ const styles: any = {
     alignItems: "center",
     justifyContent: "center",
     padding: 16,
-    background: "rgba(15, 23, 42, 0.76)",
+    background: "rgba(16, 44, 39, 0.76)",
     overflowY: "auto",
   },
 
@@ -802,7 +802,7 @@ const styles: any = {
     maxHeight: "calc(100vh - 24px)",
     overflowY: "auto",
     background: "#FFFFFF",
-    color: "#0F172A",
+    color: "#102C27",
     borderRadius: 16,
     boxShadow: "0 24px 70px rgba(0, 0, 0, 0.3)",
   },
@@ -824,7 +824,7 @@ const styles: any = {
     margin: 0,
     fontSize: 22,
     lineHeight: 1.35,
-    color: "#0F172A",
+    color: "#102C27",
     overflowWrap: "anywhere",
   },
 
@@ -835,7 +835,7 @@ const styles: any = {
     border: "none",
     borderRadius: 10,
     background: "#E2E8F0",
-    color: "#0F172A",
+    color: "#102C27",
     fontSize: 30,
     lineHeight: 1,
     cursor: "pointer",
@@ -864,7 +864,7 @@ const styles: any = {
     fontSize: 26,
     lineHeight: 1.3,
     fontWeight: 800,
-    color: "#1E3A8A",
+    color: "#1E5948",
   },
 
   detailText: {
@@ -885,7 +885,7 @@ const styles: any = {
 
   detailSectionTitle: {
     margin: "0 0 8px",
-    color: "#0F172A",
+    color: "#102C27",
     fontSize: 18,
   },
 
@@ -909,7 +909,7 @@ const styles: any = {
     marginTop: 10,
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1E3A8A",
+    color: "#1E5948",
   },
 
   desc: {
@@ -926,8 +926,8 @@ const styles: any = {
   whatsapp: {
     display: "inline-block",
     marginTop: 14,
-    background: "#0F172A",
-    color: "#FACC15",
+    background: "#102C27",
+    color: "#D6B779",
     padding: "10px 14px",
     borderRadius: 8,
     textDecoration: "none",
@@ -947,7 +947,7 @@ const styles: any = {
   emptyButton: {
     marginTop: 10,
     padding: "10px 16px",
-    background: "#1E3A8A",
+    background: "#1E5948",
     color: "#FFFFFF",
     border: "none",
     borderRadius: 8,

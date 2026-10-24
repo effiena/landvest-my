@@ -27,8 +27,8 @@ export default function SellPropertyButton() {
 const styles: any = {
   button: {
     padding: "10px 16px",
-    background: "#FACC15",
-    color: "#0F172A",
+    background: "#D6B779",
+    color: "#102C27",
     border: "none",
     borderRadius: 8,
     textDecoration: "none",

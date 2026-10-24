@@ -24,11 +24,11 @@ export default function FloatingWhatsAppContacts() {
           width: 292px;
           box-sizing: border-box;
           padding: 16px;
-          color: #EAF6FF;
-          background: linear-gradient(145deg, rgba(12,25,48,.97), rgba(7,15,31,.98));
-          border: 1px solid rgba(56,189,248,.35);
+          color: #F7F5EF;
+          background: linear-gradient(145deg, rgba(16,44,39,.98), rgba(10,31,27,.99));
+          border: 1px solid rgba(214,183,121,.42);
           border-radius: 16px;
-          box-shadow: 0 12px 40px rgba(2,8,23,.32), 0 0 22px rgba(34,211,238,.09);
+          box-shadow: 0 12px 40px rgba(2,8,23,.32), 0 0 22px rgba(214,183,121,.10);
           font-family: Arial, sans-serif;
           backdrop-filter: blur(18px);
           animation: pv-contact-in .25s ease-out;
@@ -44,7 +44,7 @@ export default function FloatingWhatsAppContacts() {
           font-size: 9px;
           font-weight: 800;
           letter-spacing: 2px;
-          color: #67E8F9;
+          color: #D6B779;
         }
         .pv-contact-title {
           margin: 5px 0 0;
@@ -110,9 +110,9 @@ export default function FloatingWhatsAppContacts() {
           height: 32px;
           flex: 0 0 32px;
           border-radius: 10px;
-          border: 1px solid rgba(103,232,249,.3);
-          background: linear-gradient(145deg, #164E63, #172554);
-          color: #A5F3FC;
+          border: 1px solid rgba(214,183,121,.35);
+          background: linear-gradient(145deg, #1E5948, #102C27);
+          color: #D6B779;
           font-size: 13px;
           font-weight: 800;
         }
@@ -159,7 +159,7 @@ export default function FloatingWhatsAppContacts() {
             width: 244px;
             padding: 11px 12px;
             border-radius: 13px;
-            box-shadow: 0 8px 25px rgba(2,8,23,.28), 0 0 14px rgba(34,211,238,.07);
+            box-shadow: 0 8px 25px rgba(2,8,23,.28), 0 0 14px rgba(214,183,121,.07);
           }
           .pv-contact-title { font-size: 14px; }
           .pv-contact-subtitle { font-size: 10px; margin-top: 3px; }
