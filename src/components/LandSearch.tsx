@@ -41,12 +41,69 @@ function formatLandArea(land: any) {
   return `${Number(value).toLocaleString()} Acres`;
 }
 
+
+function getNumericPrice(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+
+  const text = String(value).trim().toLowerCase();
+  const match = text.match(/(\d[\d,]*(?:\.\d+)?)\s*(million|mil|m|k)?\b/);
+
+  if (!match) return null;
+
+  const amount = Number(match[1].replace(/,/g, ""));
+  if (!Number.isFinite(amount)) return null;
+
+  const suffix = match[2];
+  if (suffix === "million" || suffix === "mil" || suffix === "m") {
+    return amount * 1_000_000;
+  }
+  if (suffix === "k") return amount * 1_000;
+
+  return amount;
+}
+
+function getBedroomCount(land: any): number | null {
+  const text = [
+    land?.title,
+    land?.description,
+    land?.propertyType,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  // Prefer explicit bedroom wording, including common Malaysian wording.
+  const explicit = text.match(
+    /(?:^|\b)(\d+)\s*(?:bedrooms?|beds?|bilik\s*tidur)\b/i
+  );
+
+  if (explicit) return Number(explicit[1]);
+
+  // "3 room" is accepted only for residential listings because "rooms"
+  // elsewhere may describe offices, factories, or other property types.
+  const category = String(land?.propertyCategory || "").toUpperCase();
+  const type = String(land?.propertyType || "").toLowerCase();
+  const residential =
+    category === "HOUSE" ||
+    category === "HIGH_RISE" ||
+    /house|condominium|apartment|service residence|flat|townhouse|semi-d|bungalow/i.test(type);
+
+  if (residential) {
+    const roomMatch = text.match(/\b(\d+)\s*rooms?\b/i);
+    if (roomMatch) return Number(roomMatch[1]);
+  }
+
+  return null;
+}
+
 export default function LandSearch({ lands }: { lands: any[] }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [propertyType, setPropertyType] = useState("all");
   const [state, setState] = useState("all");
   const [city, setCity] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [bedrooms, setBedrooms] = useState("all");
   const [selectedLand, setSelectedLand] = useState<any | null>(null);
 
   useEffect(() => {
@@ -149,7 +206,7 @@ export default function LandSearch({ lands }: { lands: any[] }) {
   const filteredLands = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return lands.filter((land) => {
+    const filtered = lands.filter((land) => {
       const searchableText = [
         land.title,
         land.location,
@@ -184,14 +241,40 @@ export default function LandSearch({ lands }: { lands: any[] }) {
         city === "all" ||
         land.city?.toLowerCase() === city.toLowerCase();
 
+      const bedroomCount = getBedroomCount(land);
+      const matchesBedrooms =
+        bedrooms === "all" ||
+        (bedroomCount !== null &&
+          (bedrooms === "5+"
+            ? bedroomCount >= 5
+            : bedroomCount === Number(bedrooms)));
+
       return (
         matchesSearch &&
         matchesCategory &&
         matchesPropertyType &&
         matchesState &&
-        matchesCity
+        matchesCity &&
+        matchesBedrooms
       );
     });
+
+    if (sortOrder === "price-asc") {
+      return [...filtered].sort((a, b) => {
+        const priceA = getNumericPrice(a.price);
+        const priceB = getNumericPrice(b.price);
+
+        // Listings with unrecognisable prices appear after priced listings.
+        if (priceA === null && priceB === null) return 0;
+        if (priceA === null) return 1;
+        if (priceB === null) return -1;
+
+        return priceA - priceB;
+      });
+    }
+
+    // Default: newest listings first, matching the existing homepage order.
+    return filtered;
   }, [
     lands,
     search,
@@ -199,6 +282,8 @@ export default function LandSearch({ lands }: { lands: any[] }) {
     propertyType,
     state,
     city,
+    sortOrder,
+    bedrooms,
   ]);
 
   const handleCategoryChange = (
@@ -229,6 +314,8 @@ export default function LandSearch({ lands }: { lands: any[] }) {
     setPropertyType("all");
     setState("all");
     setCity("all");
+    setSortOrder("newest");
+    setBedrooms("all");
   };
 
   const hasFilters =
@@ -236,7 +323,9 @@ export default function LandSearch({ lands }: { lands: any[] }) {
     category !== "all" ||
     propertyType !== "all" ||
     state !== "all" ||
-    city !== "all";
+    city !== "all" ||
+    sortOrder !== "newest" ||
+    bedrooms !== "all";
 
   return (
     <>
@@ -461,6 +550,30 @@ export default function LandSearch({ lands }: { lands: any[] }) {
               {item}
             </option>
           ))}
+        </select>
+
+        <select
+          aria-label="Sort listings"
+          value={sortOrder}
+          onChange={(event) => setSortOrder(event.target.value)}
+          style={styles.filterSelect}
+        >
+          <option value="newest">Sort: Newest First</option>
+          <option value="price-asc">Price: Low to High</option>
+        </select>
+
+        <select
+          aria-label="Filter by bedrooms"
+          value={bedrooms}
+          onChange={(event) => setBedrooms(event.target.value)}
+          style={styles.filterSelect}
+        >
+          <option value="all">Bedrooms: Any</option>
+          <option value="1">1 Bedroom</option>
+          <option value="2">2 Bedrooms</option>
+          <option value="3">3 Bedrooms</option>
+          <option value="4">4 Bedrooms</option>
+          <option value="5+">5+ Bedrooms</option>
         </select>
 
         {hasFilters && (
