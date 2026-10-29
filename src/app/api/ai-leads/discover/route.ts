@@ -8,9 +8,17 @@ const MIN_SCORE = 50;
 
 const SEARCHES = [
   "WTB buyer wants to buy industrial land Johor Malaysia",
-  "WTB development land buyer Sepang Dengkil KLIA Malaysia",
+  '"looking to acquire" industrial land factory warehouse Johor',
+  '"mencari tanah industri" OR "nak beli tanah industri" Johor',
   "WTB buyer wants oil palm estate agricultural land Malaysia",
-  "WTB house condominium property buyer Johor Malaysia",
+  '"mencari tanah pertanian" OR "nak beli tanah kebun" Johor',
+  "WTB development land buyer Sepang Dengkil KLIA Malaysia",
+  '"looking to acquire land" KLIA Sepang Dengkil',
+  '"mencari tanah untuk pembangunan" Sepang Selangor',
+  "WTB commercial land property investment Johor Malaysia",
+  "WTB house condominium residential property buyer Johor Malaysia",
+  '"mencari rumah untuk dibeli" Johor',
+  '"买地" OR "买房" Johor Malaysia property buyer',
 ];
 
 type SearchResult = {
@@ -60,23 +68,42 @@ function analyseResult(result: SearchResult, query: string) {
   const text = `${title}\n${excerpt}`;
   const lower = text.toLowerCase();
 
-  // Require direct buyer/agent-represented buyer intent; generic "looking for"
-  // alone is insufficient because seller advertisements often use that phrase.
-  const explicitIntent =
-    /\b(wtb|want(?:s|ed)? to buy|looking to buy|seeking to acquire|buyer(?:s)?\s+(?:(?:is|are)\s+)?(?:actively\s+)?(?:looking|seeking|wants?\s+to buy)|client\s+(?:is\s+)?(?:actively\s+)?looking|serious buyer|genuine buyer|cash buyer|requirement for)\b/i.test(text);
+  // Exclude property professionals and agent-sourced client requests.
+  const agentIndicators =
+    /\b(property agent|real estate agent|estate agent|property negotiator|real estate negotiator|registered estate agent|property consultant|realty agent|ejen hartanah|perunding hartanah|my clients?|our clients?|i have (?:a|an|many|several) clients?|clients? (?:is|are) looking|clients? seeking|listing agent|REN\s*#?\s*\d{3,})\b/i;
 
-  if (!explicitIntent) return null;
+  const selfIdentifiedAgent =
+    /\b(?:i am|i'm|we are|as a)\s+(?:a\s+)?(?:property|real estate|estate)\s+(?:agent|negotiator|consultant)\b/i;
 
-  // Reject generic articles and obvious inventory promotions.
+  if (agentIndicators.test(text) || selfIdentifiedAgent.test(text)) return null;
+
+  // Reject educational and SEO pages even when they mention buyers or budgets.
+  const articleTitle =
+    /\b(complete playbook|playbook|buying guide|buyers? guide|guide to buying|how to buy|how to choose|everything you need to know|ultimate guide|step-by-step guide|frequently asked questions|faq|market outlook|market report|property news|investment guide|property investment guide|foreign ownership rules|cost of buying|buying property as a|can foreigners buy|tips for buying)\b/i;
+
+  const educationalContent =
+    /\b(schema-ready|ai-quotable summary|frequently asked questions|in this guide|this guide explains|complete guide|buying guide|buyers? guide|ultimate guide|market outlook|market report|property news)\b/i;
+
+  const earlyText = `${title}\n${excerpt.slice(0, 1200)}`;
+
   const informational =
-    /\b(how to choose|site selection guide|approval process|everything you need to know|market outlook|property news|for auction|houses? for sale|properties for sale|browse properties|property portal)\b/i.test(
-      `${title}\n${excerpt.slice(0, 700)}`
-    );
+    articleTitle.test(title) ||
+    educationalContent.test(text) ||
+    /\b(site selection guide|approval process|browse properties|property portal|for auction|houses? for sale|properties for sale)\b/i.test(earlyText);
+
+  if (informational) return null;
+
+  // Require an explicit purchase/search request.
+  // "Cash buyer" or "serious buyer" alone is not sufficient evidence.
+  const directBuyerIntent =
+    /\b(wtb|want(?:s|ed)? to buy|looking to buy|looking to acquire|seeking to acquire|actively seeking to (?:buy|acquire)|need(?:s)? to buy|serious buyer.{0,50}(?:looking for|seeking|want(?:s)? to buy|need(?:s)? to buy)|genuine buyer.{0,50}(?:looking for|seeking|want(?:s)? to buy)|mencari untuk membeli|nak beli|ingin membeli|sedang mencari)\b|买地|买房/i.test(text);
+
+  if (!directBuyerIntent) return null;
 
   const sellerPromotion =
     /\b(our listings|we have (?:the following|various|many|available)|available now for sale|land available for sale|contact us to view our|browse our properties)\b/i.test(text);
 
-  if (informational || sellerPromotion) return null;
+  if (sellerPromotion) return null;
 
   const propertyMatch =
     /\b(industrial land|industrial property|factory|warehouse|development land|commercial land|oil palm|plantation|agricultural land|residential|house|condominium|condo|high-rise|property|real estate)\b/i.test(text);
@@ -126,6 +153,15 @@ function analyseResult(result: SearchResult, query: string) {
     excerpt,
     score: Math.min(100, score),
     reasons,
+    buyerType: /\b(company|corporate|developer|investment company|s\.?d\.?n\.?\s*bhd|berhad|investor|investment fund)\b/i.test(text)
+      ? "Company / Investor (unverified)"
+      : "Individual Buyer (unverified)",
+    buyerConfidence: Math.min(
+      95,
+      60 +
+      ( /\b(wtb|want(?:s|ed)? to buy|looking to buy|seeking to acquire|serious buyer|genuine buyer|cash buyer)\b/i.test(text) ? 15 : 0 ) +
+      ( /\b(?:budget|rm\s?[\d,.]+|\d+\s?million|acres?|hectares?|sqft)\b/i.test(text) ? 10 : 0 )
+    ),
     city: matchedLocation[0],
     propertyType,
     requiredSize: sizeMatch?.[0]?.slice(0, 120) || null,
@@ -149,43 +185,71 @@ export async function POST() {
     const candidates = new Map<string, NonNullable<ReturnType<typeof analyseResult>>>();
     let searchesCompleted = 0;
 
-    for (const query of SEARCHES) {
-      const response = await fetch("https://api.tavily.com/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        cache: "no-store",
-        body: JSON.stringify({
-          api_key: apiKey,
-          query,
-          search_depth: "basic",
-          max_results: 5,
-          include_answer: false,
-          include_raw_content: false,
-        }),
-        signal: AbortSignal.timeout(15000),
-      });
+    let searchesFailed = 0;
 
-      if (!response.ok) {
-        console.error("[AI Lead Discovery Preview] Provider status:", response.status);
-        return NextResponse.json(
-          { error: "Search provider request failed. Check the API key, quota and provider status." },
-          { status: 502 }
-        );
-      }
+    // Four concurrent searches per batch; keep within the route time limit.
+    for (let i = 0; i < SEARCHES.length; i += 4) {
+      const batch = SEARCHES.slice(i, i + 4);
 
-      const payload = await response.json();
-      const results: SearchResult[] = Array.isArray(payload.results) ? payload.results : [];
-      searchesCompleted += 1;
+      const batchResults = await Promise.all(batch.map(async (query) => {
+        try {
+          const response = await fetch("https://api.tavily.com/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({
+              api_key: apiKey,
+              query,
+              search_depth: "basic",
+              max_results: 5,
+              include_answer: false,
+              include_raw_content: false,
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
 
-      for (const result of results) {
-        const item = analyseResult(result, query);
-        if (!item || item.score < MIN_SCORE) continue;
+          if (!response.ok) {
+            console.error("[AI Lead Discovery Preview] Provider status:", response.status);
+            return { query, results: [] as SearchResult[], failed: true };
+          }
 
-        const existing = candidates.get(item.url);
-        if (!existing || item.score > existing.score) {
-          candidates.set(item.url, item);
+          const payload = await response.json();
+          return {
+            query,
+            results: Array.isArray(payload.results) ? payload.results as SearchResult[] : [],
+            failed: false,
+          };
+        } catch (error) {
+          console.error("[AI Lead Discovery Preview] Search failed:", query, error);
+          return { query, results: [] as SearchResult[], failed: true };
+        }
+      }));
+
+      for (const batchResult of batchResults) {
+        if (batchResult.failed) {
+          searchesFailed += 1;
+          continue;
+        }
+
+        searchesCompleted += 1;
+
+        for (const result of batchResult.results) {
+          const item = analyseResult(result, batchResult.query);
+          if (!item || item.score < MIN_SCORE) continue;
+
+          const existing = candidates.get(item.url);
+          if (!existing || item.score > existing.score) {
+            candidates.set(item.url, item);
+          }
         }
       }
+    }
+
+    if (searchesCompleted === 0) {
+      return NextResponse.json(
+        { error: "All search requests failed. Check Tavily quota, API key and provider status." },
+        { status: 502 }
+      );
     }
 
     const preview = [...candidates.values()]
@@ -198,6 +262,7 @@ export async function POST() {
       mode: "preview-only",
       saved: 0,
       searchesCompleted,
+      searchesFailed,
       candidatesFound: preview.length,
       candidates: preview,
       message: preview.length

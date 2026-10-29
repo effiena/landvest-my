@@ -194,6 +194,8 @@ function DiscoveredLeadReviewPanel() {
   const [discovering, setDiscovering] = useState(false);
   const [discoveryMessage, setDiscoveryMessage] = useState("");
   const [previewCandidates, setPreviewCandidates] = useState<any[]>([]);
+  const [selectedPreviewUrls, setSelectedPreviewUrls] = useState<string[]>([]);
+  const [savingSelected, setSavingSelected] = useState(false);
 
 
   const loadLeads = async () => {
@@ -237,6 +239,7 @@ function DiscoveredLeadReviewPanel() {
     setDiscoveryMessage("");
     setLeadError("");
     setPreviewCandidates([]);
+    setSelectedPreviewUrls([]);
 
     try {
       const response = await fetch("/api/ai-leads/discover", {
@@ -257,6 +260,78 @@ function DiscoveredLeadReviewPanel() {
       setLeadError(error?.message || "Unable to run discovery preview.");
     } finally {
       setDiscovering(false);
+    }
+  };
+
+  const saveSelectedLeads = async () => {
+    const selected = previewCandidates.filter(
+      (candidate) => selectedPreviewUrls.includes(candidate.url)
+    );
+
+    if (!selected.length || savingSelected) return;
+
+    setSavingSelected(true);
+    setLeadError("");
+
+    let saved = 0;
+    let duplicates = 0;
+    const failedUrls: string[] = [];
+    let firstError = "";
+
+    try {
+      for (const candidate of selected) {
+        try {
+          const response = await fetch("/api/ai-leads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store",
+            body: JSON.stringify({
+              sourceName: String(candidate.title || "Buyer lead").slice(0, 200),
+              sourceUrl: candidate.url,
+              excerpt: candidate.excerpt || "",
+              city: candidate.city || null,
+              propertyType: candidate.propertyType || null,
+              requiredSize: candidate.requiredSize || null,
+              leadScore: Number.isInteger(candidate.score) ? candidate.score : 0,
+              budgetMin: null,
+              budgetMax: null,
+            }),
+          });
+
+          const data = await response.json().catch(() => ({}));
+
+          if (response.status === 409) {
+            duplicates += 1;
+            continue;
+          }
+
+          if (!response.ok) {
+            failedUrls.push(candidate.url);
+            if (!firstError) {
+              firstError = data.error || "A selected lead could not be saved.";
+            }
+            continue;
+          }
+
+          saved += 1;
+        } catch {
+          failedUrls.push(candidate.url);
+          if (!firstError) firstError = "Network error while saving selected leads.";
+        }
+      }
+
+      setSelectedPreviewUrls(failedUrls);
+      setDiscoveryMessage(
+        `Save complete: ${saved} saved, ${duplicates} already saved, ${failedUrls.length} failed. ` +
+        (failedUrls.length
+          ? "Failed items remain selected so you can retry."
+          : "Saved leads are pending your review.")
+      );
+
+      if (firstError) setLeadError(firstError);
+      await loadLeads();
+    } finally {
+      setSavingSelected(false);
     }
   };
 
@@ -415,6 +490,63 @@ function DiscoveredLeadReviewPanel() {
           <p style={{ margin: "0 0 12px", color: "#92400e", fontSize: 12, lineHeight: 1.5 }}>
             Search relevance is not proof of a genuine buyer. Open each original source and verify the requirement. These results have not been saved or contacted.
           </p>
+          <div style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 12,
+          }}>
+            <button
+              type="button"
+              onClick={() => {
+                const allUrls = previewCandidates.map((candidate) => candidate.url);
+                setSelectedPreviewUrls(
+                  selectedPreviewUrls.length === allUrls.length ? [] : allUrls
+                );
+              }}
+              disabled={savingSelected}
+              style={{
+                border: "1px solid #d97706",
+                borderRadius: 8,
+                padding: "9px 12px",
+                background: "#fff",
+                color: "#92400e",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {selectedPreviewUrls.length === previewCandidates.length
+                ? "Clear Selection"
+                : "Select All"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void saveSelectedLeads()}
+              disabled={savingSelected || selectedPreviewUrls.length === 0}
+              style={{
+                border: 0,
+                borderRadius: 8,
+                padding: "9px 14px",
+                background:
+                  savingSelected || selectedPreviewUrls.length === 0
+                    ? "#cbd5e1"
+                    : "#047857",
+                color: "#fff",
+                fontWeight: 700,
+                cursor:
+                  savingSelected || selectedPreviewUrls.length === 0
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+            >
+              {savingSelected
+                ? "Saving Selected…"
+                : `Save Selected Leads (${selectedPreviewUrls.length})`}
+            </button>
+          </div>
+
           <div style={{ display: "grid", gap: 10 }}>
             {previewCandidates.map((candidate, index) => (
               <article
@@ -427,6 +559,33 @@ function DiscoveredLeadReviewPanel() {
                   overflowWrap: "anywhere",
                 }}
               >
+                <label style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  marginBottom: 10,
+                  color: "#92400e",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedPreviewUrls.includes(candidate.url)}
+                    disabled={savingSelected}
+                    onChange={(event) => {
+                      setSelectedPreviewUrls((current) =>
+                        event.target.checked
+                          ? current.includes(candidate.url)
+                            ? current
+                            : [...current, candidate.url]
+                          : current.filter((url) => url !== candidate.url)
+                      );
+                    }}
+                    style={{ marginTop: 2 }}
+                  />
+                  Select this lead to save
+                </label>
                 <div style={{
                   display: "flex",
                   justifyContent: "space-between",
